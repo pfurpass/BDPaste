@@ -1,149 +1,149 @@
 # BDPaste
 
-Paper-Plugin, das Modelle von [bdengine.app](https://bdengine.app/) importiert und sie
-**mit dem Fadenkreuz** in der Welt platziert — statt riesige `/summon`-Befehle in Command-Blöcke zu kopieren.
+A Paper plugin that imports models from [bdengine.app](https://bdengine.app/) and places them
+**with your crosshair** — instead of pasting enormous `/summon` commands into command blocks.
 
-Gebaut gegen **Paper 26.2** (`paper-api 26.2.build.116-stable`, Java 25).
+Built against **Paper 26.2** (`paper-api 26.2.build.116-stable`, Java 25).
 
 ---
 
 ## Installation
 
-1. `BDPaste-1.0.0.jar` nach `plugins/` kopieren, Server starten.
-2. Beim ersten Start entstehen `plugins/BDPaste/config.yml` und `plugins/BDPaste/models/`.
-3. Modelldateien in `plugins/BDPaste/models/` legen.
-4. `/bdpaste list` zeigt, was gefunden wurde.
+1. Copy `BDPaste-1.0.0.jar` into `plugins/` and start the server.
+2. The first start creates `plugins/BDPaste/config.yml` and `plugins/BDPaste/models/`.
+3. Put model files into `plugins/BDPaste/models/`.
+4. `/bdpaste list` shows what it found.
 
-## Modell aus BDEngine holen
+## Getting a model out of BDEngine
 
-Es gehen **vier** Wege — such dir den bequemsten aus:
+There are **four** ways in — take whichever is least trouble:
 
-| Datei | Woher in BDEngine | Bemerkung |
+| File | Where it comes from in BDEngine | Notes |
 |---|---|---|
-| `.bdengine` | Projekt speichern / herunterladen | **empfohlen**, enthält den kompletten Baum |
-| `.json` | rohes Projekt-JSON | falls schon entpackt |
-| `.txt` / `.mcfunction` | „Export to Minecraft“ → Summon-Befehl kopieren, in eine Textdatei einfügen | mehrere `summon`-Zeilen (Summon #1, #2 …) einfach untereinander |
-| `.zip` | „Export Model as a datapack“ | enthält Modell *und* fertig gebackene Animationsspuren |
+| `.bdengine` | save / download the project | **recommended**, carries the whole tree |
+| `.json` | the raw project JSON | if you already unpacked it |
+| `.txt` / `.mcfunction` | "Export to Minecraft" → copy the summon command into a text file | several `summon` lines (Summon #1, #2 …) can simply follow one another |
+| `.zip` | "Export Model as a datapack" | carries the model *and* fully baked animation tracks |
 
-Dazu kommt das JSON-Format, das `/bdpaste import` von block-display.com holt (siehe unten) —
-es landet als `.json` im Models-Ordner und ist danach ganz normal nutzbar.
+On top of that there is the JSON format `/bdpaste import` fetches from block-display.com (see
+below) — it lands in the models folder as a `.json` and behaves like any other file afterwards.
 
-Der Dateiname ohne Endung ist der Modellname: `mater.bdengine` → `/bdpaste place mater`.
+The filename without its extension is the model name: `mater.bdengine` → `/bdpaste place mater`.
 
-### Direkt von block-display.com
+### Straight from block-display.com
 
-Am bequemsten: den Share-Link der Modellseite nehmen, fertig.
+Easiest of all: take the share link off the model page, done.
 
 ```bash
 /bdpaste import https://bde.gg/b/298796
 ```
 
-Funktioniert mit `bde.gg/b/<id>`, `block-display.com/bd/<id>`, dem BDEngine-Editor-Link
-(`bdengine.app/?...&id=<id>`) oder einfach der nackten ID (`/bdpaste import 298796`).
+Works with `bde.gg/b/<id>`, `block-display.com/bd/<id>`, a BDEngine editor link
+(`bdengine.app/?...&id=<id>`), or just the bare id (`/bdpaste import 298796`).
 
-block-display.com veröffentlicht Modelle auf zwei Arten, und welche es ist, entscheidet die
-Seite pro Modell: ältere als fertige Summon-Befehle, neuere als Editor-Projektdatei
-(gzip-komprimierter `PRJ2`-Container). BDPaste probiert beides der Reihe nach durch — du
-merkst davon nichts.
-Der Modellname kommt dann von der Seite selbst — optional überschreibbar:
+block-display.com publishes models in two shapes, and which one you get is decided per model by
+the site: older ones as finished summon commands, newer ones as an editor project file (a
+gzipped `PRJ2` container). BDPaste tries both in turn — you will not notice.
+The model name then comes from the page itself, and can be overridden:
 `/bdpaste import 298796 gogzilla`.
 
-Ein direkter Datei-Link geht auch:
+A direct file link works too:
 
 ```bash
 /bdpaste import https://example.com/mater.bdengine
 ```
 
-## Platzieren
+## Placing
 
 ```bash
 /bdpaste place mater
 ```
 
-Dann folgt eine echte, vollständige Vorschau deinem Fadenkreuz (nur du siehst sie):
+A real, fully built preview then follows your crosshair (only you can see it):
 
-| Eingabe | Wirkung |
+| Input | Effect |
 |---|---|
-| Maus bewegen | Modell positionieren |
-| Mausrad | den gerade gewählten Wert ändern |
-| Shift + Mausrad | anderen Wert wählen (Distanz, Yaw, Pitch, Roll, Scale, Offset X/Y/Z) |
-| F (Hände tauschen) | **einfrieren / lösen** — Modell bleibt stehen, du kannst drumherum laufen |
-| Rechtsklick | platzieren |
-| Linksklick | **Schrittweite wechseln** |
-| Shift + Linksklick | gewählten Wert zurücksetzen |
-| Shift + F | Snap umschalten: aus / Pixel / Block |
-| Q (Item droppen) | **pausieren / fortsetzen** — kurz raus, was bauen, dann zurück |
-| Shift + Q | abbrechen |
+| Move mouse | position the model |
+| Scroll | change the selected value |
+| Shift + Scroll | select another value (distance, yaw, pitch, roll, scale, offset X/Y/Z) |
+| F (swap hands) | **freeze / unfreeze** — the model stays put and you can walk around it |
+| Right click | place it |
+| Left click | **change the step size** |
+| Shift + Left click | reset the selected value |
+| Shift + F | cycle snap: off / pixel / block |
+| Q (drop item) | **pause / resume** — step out, build something, come back |
+| Shift + Q | cancel |
 
-Die Actionbar zeigt durchgehend auch die **Koordinaten**, an denen das Modell gerade sitzt.
+The action bar also shows the **coordinates** the model currently sits at, the whole time.
 
-**Einfrieren** ist zum Prüfen vor dem Akzeptieren: einmal **F**, das Modell hängt sich vom
-Fadenkreuz ab und bleibt stehen. Jetzt kannst du drumherum laufen und es dir von allen Seiten
-ansehen. Drehen, Skalieren und die Offsets funktionieren dabei weiter — nur die Position ist
-fest. Nochmal **F** löst wieder, Rechtsklick akzeptiert. Die Actionbar zeigt `FROZEN`.
+**Freezing** is for checking before you accept: press **F** once and the model unhooks from your
+crosshair and stays where it is. Now you can walk around it and look at it from every side.
+Turning, scaling and the offsets all keep working — only the position is fixed. **F** again lets
+it go, right click accepts. The action bar shows `FROZEN`.
 
-Modell und Fadenkreuz bleiben beim Skalieren und Drehen fest verbunden — der Pivot
-(je nach `placement.pivot` die Modellmitte unten oder der BDEngine-Nullpunkt) sitzt immer
-genau auf dem Cursor.
+The model and the crosshair stay locked together while scaling and turning — the pivot (the
+bottom middle of the model, or the BDEngine origin, depending on `placement.pivot`) always sits
+exactly on the cursor.
 
-Hat man beim Start nichts in der Hand, legt BDPaste kurzzeitig einen Stock hinein und nimmt
-ihn danach wieder weg. Grund: Vanilla-Clients schicken beim Rechtsklick **in die Luft** mit
-leerer Hand gar kein Paket — ohne Item ließe sich nur platzieren, während man auf einen Block
-zielt. Ein bereits belegter Slot wird nie angefasst.
+If your hand is empty when you start, BDPaste briefly puts a stick in it and takes it away
+afterwards. The reason: vanilla clients send no packet at all when you right click **air** with
+an empty hand — without an item you could only ever place while aiming at a block. A slot that
+is already occupied is never touched.
 
-Die Actionbar zeigt durchgehend Modellname, aktiven Wert, Yaw/Pitch/Roll, Scale und Snap-Status.
+The action bar shows the model name, the active value, yaw/pitch/roll, scale and the snap mode
+throughout.
 
-### Schrittweite
+### Step size
 
-Jeder Wert hat eine eigene Leiter, die **Linksklick** durchschaltet:
+Every value has its own ladder, which **left click** steps through:
 
-| Wert | Stufen |
+| Value | Steps |
 |---|---|
 | Yaw / Pitch / Roll | 1° · 5° · 15° · 45° · 90° |
-| Offset X/Y/Z | 0.03125 · 0.0625 · 0.125 · 0.25 · 0.5 · 1 Blöcke |
+| Offset X/Y/Z | 0.03125 · 0.0625 · 0.125 · 0.25 · 0.5 · 1 blocks |
 | Scale | ×1.01 · ×1.02 · ×1.05 · ×1.1 · ×1.25 · ×2 |
-| Distanz | 0.25 · 0.5 · 1 · 2 · 5 |
+| Distance | 0.25 · 0.5 · 1 · 2 · 5 |
 
-Die aktuelle Schrittweite steht in der Actionbar. Beliebige Werte gehen auch:
+The current step size is in the action bar. Arbitrary values work too:
 
 ```bash
 /bdpaste step 0.01
 /bdpaste step 7.5 yaw
 ```
 
-Verstellt? `/bdpaste step` listet alle Schrittweiten auf, `/bdpaste step reset` setzt sie
-auf die Werte aus der `config.yml` zurück.
+Lost track? `/bdpaste step` lists every step size, `/bdpaste step reset` puts them back to the
+values from `config.yml`.
 
-Schrittweiten, Grid-Snap und der zuletzt gewählte Wert werden **pro Spieler gemerkt** und
-liegen in `plugins/BDPaste/players.yml` — beim nächsten Modell ist alles wieder so eingestellt,
-auch nach einem Serverneustart.
+Step sizes, grid snap and the last selected value are **remembered per player** and live in
+`plugins/BDPaste/players.yml` — the next model starts with everything set the way you left it,
+server restart included.
 
 ### Snap
 
-Drei Stufen, umschaltbar mit **Shift + F** oder `/bdpaste snap [off|pixel|block]`:
+Three modes, switched with **Shift + F** or `/bdpaste snap [off|pixel|block]`:
 
-| Modus | Raster | wofür |
+| Mode | Grid | What for |
 |---|---|---|
-| `block` | 1 Block | am Bauraster ausrichten |
-| `pixel` | 1/16 Block | Feinjustierung auf Texturpixel |
-| `off` | keins | exakt dorthin, wo du zeigst |
+| `block` | 1 block | lining up with the build grid |
+| `pixel` | 1/16 block | fine adjustment to texture pixels |
+| `off` | none | exactly where you point |
 
-Auf einer Oberfläche rastet `pixel` auf das Pixelraster der Blockfläche, `block` auf die
-Blockecke. Frei in der Luft gilt dasselbe Raster. Die Rastergröße für `pixel` steht als
-`placement.pixel-snap` in der `config.yml` (Standard `0.0625` = 1/16).
+On a surface, `pixel` snaps to the pixel grid of the block face and `block` to the block corner.
+Free in the air the same grid applies. The grid size for `pixel` is `placement.pixel-snap` in
+`config.yml` (default `0.0625` = 1/16).
 
-### Kurz rausgehen
+### Stepping out for a moment
 
-**Q** pausiert: die Vorschau bleibt stehen, du bekommst Hotbar und Klicks zurück und kannst
-ganz normal Blöcke setzen oder abbauen, um zu vergleichen. Nochmal **Q** (oder **Shift + F**
-bzw. `/bdpaste resume`) holt dich zurück. Die Actionbar zeigt `PAUSED`.
+**Q** pauses: the preview stays put, you get your hotbar and your clicks back, and you can place
+and break blocks normally to compare. **Q** again (or **Shift + F**, or `/bdpaste resume`)
+brings you back. The action bar shows `PAUSED`.
 
-Weil Q zurückholt, kannst du während der Pause keine Items wegwerfen — alles andere geht.
+Because Q is what brings you back, you cannot drop items while paused — everything else works.
 
-Zum Abbrechen ist es jetzt **Shift + Q** — die zerstörerische Aktion liegt hinter dem Modifier,
-nicht die harmlose.
+Cancelling is **Shift + Q** — the destructive action is the one behind the modifier, not the
+harmless one.
 
-Für exakte Werte statt Mausrad:
+For exact values instead of the scroll wheel:
 
 ```bash
 /bdpaste set yaw 90
@@ -151,62 +151,61 @@ Für exakte Werte statt Mausrad:
 /bdpaste set offset_y 1.5
 ```
 
-## Animationen
+## Animations
 
-Animationen kommen aus jeder Quelle — Link, `.bdengine`-Datei oder Datapack. Ein Extraschritt
-ist nicht nötig:
+Animations come from every source — a link, a `.bdengine` file or a datapack. There is no extra
+step:
 
 ```bash
 /bdpaste import https://block-display.com/bd/299039 fermier
 /bdpaste place fermier
-/bdpaste animate              # startet die erste Animation
-/bdpaste animate talking      # eine bestimmte Spur
-/bdpaste animate talking 0.5  # halbes Tempo
-/bdpaste animate talking once # einmal abspielen, Endpose bleibt stehen
+/bdpaste animate              # starts the first animation
+/bdpaste animate talking      # a particular track
+/bdpaste animate talking 0.5  # half speed
+/bdpaste animate talking once # play it through once, the end pose stays
 /bdpaste animate off
 ```
 
-Die Argumente stehen in beliebiger Reihenfolge: eine Zahl ist das Tempo, `once` bzw. `loop`
-entscheidet über die Wiederholung, alles andere ist ein Animationsname.
+The arguments can come in any order: a number is the speed, `once` or `loop` decides whether it
+repeats, anything else is an animation name.
 
-`/bdpaste inspect fermier` listet die enthaltenen Spuren mit Länge auf. Die Namen sind die
-aus dem Editor, BDPaste liest sie aus `listAnim` der Projektdatei bzw. aus den Ordnernamen
-des Datapacks.
+`/bdpaste inspect fermier` lists the tracks it carries with their lengths. The names are the
+ones from the editor — BDPaste reads them out of `listAnim` in the project file, or out of the
+folder names in a datapack.
 
-**Wie genau das ist.** Aus einem Datapack spielt BDPaste die dort pro Tick hinterlegten
-Matrizen ab — nachgemessen über zwei komplette Durchläufe, 86 Teile, 25 Ticks: Abweichung
-0.000000000. Aus der Projektdatei rechnet BDPaste dieselben Posen selbst aus; gegen das
-Datapack desselben Modells geprüft bleibt der Unterschied unter **0,0008 Pixel** — und zwar
-bei einem Modell, das animierte Gruppen fünf Ebenen tief verschachtelt und an fast jeder
-davon einen eigenen Pivot hängen hat.
+**How exact this is.** From a datapack BDPaste replays the matrices stored there per tick —
+measured over two complete runs, 86 parts, 25 ticks: deviation 0.000000000. From the project
+file BDPaste works the same poses out for itself; checked against the datapack of the same
+model, the difference stays under **0.0008 pixels** — and that on a model that nests animated
+groups five levels deep with a pivot of its own hanging off nearly every one of them.
 
-Der Schlüssel dazu ist, wie BDEngine einen Pivot in die Matrix eines Knotens einrechnet:
+The key to it is how BDEngine folds a pivot into a node's matrix:
 
 ```
-transforms = T(pivot_Eltern) · T(position) · Rx · Ry · Rz · S · T(−pivot_eigen)
+transforms = T(pivot_parent) · T(position) · Rx · Ry · Rz · S · T(−pivot_own)
 ```
 
-Im Ruhezustand heben sich die beiden Pivot-Terme zwischen Eltern und Kind gegenseitig auf —
-deshalb kommt der statische Import auch ohne sie aus. Sobald eine Gruppe animiert, tun sie das
-nicht mehr: `T(−pivot_eigen)` sorgt dafür, dass die Gruppe **um ihren Pivot** dreht und
-skaliert, und `T(pivot_Eltern)` setzt sie in den Rahmen zurück, den ihre Elterngruppe
-weitergibt. Fehlt der vordere Term, sitzt jedes Kind einer Gruppe mit Pivot genau um diesen
-Pivot versetzt — das ist es, was verschachtelte Modelle früher auseinandergerissen hat.
+At rest the two pivot terms between parent and child cancel each other out — which is why the
+static import gets by without them. The moment a group animates they no longer do:
+`T(−pivot_own)` is what makes the group turn and scale **around its pivot**, and
+`T(pivot_parent)` puts it back into the frame its parent group hands down. Leave the first term
+out and every child of a group with a pivot sits offset by exactly that pivot — which is what
+used to tear nested models apart.
 
-Animiert werden nur die Teile unter einer animierten Gruppe — beim Propeller drehen sich
-die 45 Blätter, die 24 Gehäuseteile bleiben stehen. Der Zustand wird gespeichert und läuft
-nach einem Serverneustart von selbst weiter, sobald jemand in die Nähe kommt.
+Only the parts underneath an animated group move — on the propeller the 45 blades turn while the
+24 housing parts stand still. The state is saved and picks itself up again after a server
+restart, as soon as somebody comes near.
 
-Steuerung in der `config.yml` unter `animation:` — Aktualisierungsintervall, Obergrenze für
-gleichzeitig laufende Modelle und der Radius, ab dem überhaupt animiert wird.
+Controlled in `config.yml` under `animation:` — the update interval, a ceiling on how many models
+may run at once, and the radius within which anything animates at all.
 
-> Modelle, die du **vor** dieser Version platziert hast, tragen noch keinen Teil-Index und
-> lassen sich nicht animieren. Einmal `/bdpaste move` und neu bestätigen genügt.
+> Models you placed **before** this version carry no part index yet and cannot be animated.
+> One `/bdpaste move` and confirming again is enough.
 
 ### Sound
 
-Manche Modelle bringen eine Notenspur mit — BDEngine legt sie unter `listSound` ab, eine pro
-Animation. BDPaste spielt sie beim Animieren automatisch mit:
+Some models bring a note track with them — BDEngine keeps it under `listSound`, one per
+animation. BDPaste plays it along with the animation automatically:
 
 ```bash
 /bdpaste import https://block-display.com/bd/295020 rat
@@ -214,19 +213,19 @@ Animation. BDPaste spielt sie beim Animieren automatisch mit:
 /bdpaste animate dance
 ```
 
-`/bdpaste inspect rat` zeigt an, welche Animation Noten hat und wie viele.
+`/bdpaste inspect rat` shows which animation has notes and how many.
 
-Eine Zeitleiste kann auch **nur** aus Noten bestehen, ganz ohne Keyframes — RUSH E auf
-block-display sind 1071 Noten und kein einziger Keyframe. Solche Modelle stehen still und
-spielen, und `/bdpaste inspect` schreibt `(sound only)` dahinter. Die Länge der Notenrolle
-bestimmt dann die Schleife.
+A timeline can also consist of **nothing but** notes, without a single keyframe — RUSH E on
+block-display is 1071 notes and no keyframes at all. Models like that stand still and play, and
+`/bdpaste inspect` writes `(sound only)` after them. The length of the note roll then sets the
+loop.
 
-Läuft die Rolle länger als die Animation, gibt ebenfalls sie den Takt vor: die Bewegung hält
-ihre Endpose, bis die Musik durch ist. Genau das zeigt der Editor an der Stelle auch.
+If the roll runs longer than the animation, it sets the pace as well: the movement holds its end
+pose until the music is through. That is exactly what the editor shows there too.
 
-Der Ton kommt **am Modell** heraus, verhallt also mit der Entfernung wie alles andere, und
-läuft über dieselbe Kategorie wie Notenblöcke — der Spieler regelt ihn also über den
-Jukebox-Regler, nicht über Master. Abschalten oder leiser stellen geht in der `config.yml`:
+The sound comes out **at the model**, so it fades with distance like anything else in the world,
+and it runs through the same category as note blocks — meaning players control it with the
+jukebox slider, not the master one. Turning it off or down lives in `config.yml`:
 
 ```yaml
 animation:
@@ -236,90 +235,88 @@ animation:
 
 #### Tempo
 
-Das Feld heißt `tick`, ist aber **kein Tick-Zähler, sondern ein Index** in eine Tabelle von
-Schrittweiten. Der Editor rechnet an drei Stellen dasselbe:
+The field is called `tick`, but it is **not a tick count — it is an index** into a table of step
+sizes. The editor works the same thing out in three places:
 
 ```js
-needTime = Math.floor(currentTime / (1 === tick ? .5 : tick - 1))          // Wiedergabe
-getSoundStepTicks: 1 -> 1,  2 (default) -> 2,  3 -> 4                       // Export, Game-Ticks
-schedule-Verzögerung: 1 -> .05s,  2 -> .1s,  3 -> .2s                       // Export, Sekunden
+needTime = Math.floor(currentTime / (1 === tick ? .5 : tick - 1))          // playback
+getSoundStepTicks: 1 -> 1,  2 (default) -> 2,  3 -> 4                       // export, game ticks
+schedule delay:    1 -> .05s,  2 -> .1s,  3 -> .2s                          // export, seconds
 ```
 
-Ein Schritt dauert also **1, 2 oder 4 Game-Ticks**. Die Oberfläche begrenzt `tick` beim Speichern
-auf 1..3, andere Werte kann ein Projekt nicht enthalten.
+So one step lasts **1, 2 or 4 game ticks**. The interface clamps `tick` to 1..3 when saving, so a
+project cannot contain any other value.
 
-Als „so viele Ticks" gelesen stimmt es zufällig für 1 und 2 und ist bei 3 um ein Drittel zu
-schnell — RUSH E lief damit 85 statt 114 Sekunden.
+Read as "that many ticks" it happens to be right for 1 and 2, and is a third too fast at 3 —
+RUSH E ran 85 seconds instead of 114 that way.
 
-#### Doppelte Noten
+#### Duplicate notes
 
-Echte Rollen enthalten dieselbe Note mehrfach zur selben Zeit: RUSH E hat 111 exakte Doppel
-über 59 Schritte, an einer Stelle fünffach. Zwei identische Samples, die im selben Tick am
-selben Ort starten, klingen nicht wie zwei Noten, sondern wie eine mit doppelter Amplitude —
-phasengleich, und fünf davon übersteuern. Der Editor feuert sie alle und hat keinen Limiter,
-was ihm Web Audio verzeiht; das Spiel nicht.
+Real rolls contain the same note several times at the same moment: RUSH E has 111 exact
+duplicates across 59 steps, five deep in one place. Two identical samples starting in the same
+tick at the same spot do not sound like two notes but like one at double the amplitude — they
+are in phase, and five of them clip. The editor fires them all and has no limiter, which Web
+Audio forgives; the game does not.
 
-BDPaste wirft exakte Doppel weg — gleicher Schritt, gleicher Sound, gleiche Tonhöhe. Ein Akkord
-sind mehrere *verschiedene* Töne auf einem Schritt und bleibt unangetastet.
+BDPaste throws exact duplicates away — same step, same sound, same pitch. A chord is several
+*different* notes on one step and is left alone.
 
-#### Tonhöhe
+#### Pitch
 
-Der Editor lässt Noten weit außerhalb dessen zu, was Minecraft abspielen kann. Seine Vorschau
-läuft über Web Audio, das jede Abspielrate mitmacht; das Spiel kappt auf 0,5 bis 2,0, also je
-eine Oktave nach oben und unten. Beim Rat liegen **49 % der Harfennoten** außerhalb — der
-Bereich geht von −30 bis +15 Halbtönen, fast vier Oktaven.
+The editor allows notes far outside what Minecraft can play. Its preview runs through Web Audio,
+which will play at any rate; the game clamps to 0.5–2.0, which is one octave either way. On the
+rat, **49% of the harp notes** fall outside — the range runs from −30 to +15 semitones, nearly
+four octaves.
 
-BDEngines eigener Datapack-Export schreibt trotzdem den Rohwert:
+BDEngine's own datapack export writes the raw value regardless:
 
 ```
 playsound ${note.id} block @a ~ ~ ~ ${round2(note.volume)} ${round3(note.pitch)}
 ```
 
-Damit klingt dort dieselbe Hälfte der Noten falsch, und Werte über 2,0 lehnt `/playsound` sogar
-ganz ab. Es gibt also nichts zum Abschauen.
+So the same half of the notes sound wrong there too, and `/playsound` refuses values above 2.0
+outright. There is nothing to copy from.
 
-BDPaste löst es so, wie Minecraft es selbst vorsieht: über das **Instrument** statt über die
-Tonhöhe. Jeder Notenblock-Sound deckt zwei Oktaven ab, und sie sitzen im Oktavabstand
-übereinander. Eine zu tiefe Note geht an einen tieferen Sound und erklingt **exakt auf der
-geschriebenen Frequenz** — nur mit anderer Klangfarbe. Genau so ist Notenblock-Musik immer
-arrangiert worden.
+BDPaste solves it the way Minecraft intends: through the **instrument** rather than the pitch.
+Every note block sound covers two octaves, and they sit an octave apart from one another. A note
+that is too low goes to a lower sound and rings out **at exactly the written frequency** — just
+with a different timbre. That is how note block music has always been arranged.
 
-Welcher Sound das ist, lässt sich nicht aus der Datei ableiten, sondern nur nach Gehör
-entscheiden — also steht es in der Config:
+Which sound that should be cannot be derived from the file, only decided by ear — so it lives in
+the config:
 
 ```yaml
 animation:
-  sound-low: bass      # für Noten unterhalb des spielbaren Bereichs
-  sound-high: bell     # für Noten darüber
+  sound-low: bass      # for notes below the playable range
+  sound-high: bell     # for notes above it
 ```
 
-| Versatz | Instrumente |
+| Offset | Instruments |
 |---|---|
-| zwei Oktaven tiefer | `bass`, `didgeridoo` |
-| eine Oktave tiefer | `guitar` |
-| eine Oktave höher | `flute`, `cow_bell` |
-| zwei Oktaven höher | `bell`, `chime`, `xylophone` |
+| two octaves down | `bass`, `didgeridoo` |
+| one octave down | `guitar` |
+| one octave up | `flute`, `cow_bell` |
+| two octaves up | `bell`, `chime`, `xylophone` |
 
-Der Versatz ist pro Instrument bekannt, du musst also nur den Namen tauschen — der Ton bleibt
-derselbe, egal welches du nimmst. `flute` pfeift, `bell` klingelt, `chime` ist weicher,
-`xylophone` hölzern.
+The offset is known per instrument, so you only have to swap the name — the note stays the same
+whichever you pick. `flute` whistles, `bell` rings, `chime` is softer, `xylophone` is wooden.
 
-Beim Rat wechseln damit 70 von 212 Noten das Instrument, keine einzige verschiebt sich in der
-Tonhöhe. Schlagwerk (`hat`, `snare`, `basedrum`) hat keine Oktave zum Verschieben und wird
-gekappt statt versetzt.
+On the rat that moves 70 of 212 notes to a different instrument, and not one of them shifts in
+pitch. Percussion (`hat`, `snare`, `basedrum`) has no octave to shift into and is clamped
+instead.
 
-Was bleibt: nur **Projektdateien** tragen Noten. Ein Datapack-Export backt seine Sounds in
-Funktionen — ein anderes Format, das BDPaste nicht liest.
+What remains: only **project files** carry notes. A datapack export bakes its sounds into
+functions — a different format, which BDPaste does not read.
 
-**Tempo.** Ein Keyframe ist kein Server-Tick: BDEngine hält jeden Keyframe 0,1 Sekunden —
-im Editor wie in den Datapacks, die es exportiert (`schedule ... 0.1s` mit
-`interpolation_duration:2`). BDPaste macht es genauso, zwei Ticks pro Keyframe. Wer es global
-anders will, stellt `animation.ticks-per-keyframe` in der `config.yml` um; für ein einzelnes
-Modell reicht `/bdpaste animate <name> <tempo>`.
+**Tempo.** A keyframe is not a server tick: BDEngine holds every keyframe for 0.1 seconds — in
+the editor as well as in the datapacks it exports (`schedule ... 0.1s` with
+`interpolation_duration:2`). BDPaste does the same, two ticks per keyframe. If you want it
+different everywhere, change `animation.ticks-per-keyframe` in `config.yml`; for a single model
+`/bdpaste animate <name> <speed>` is enough.
 
-## Namensschild
+## Floating name
 
-Optional — ohne Zutun bekommt kein Modell eines. Anvisieren und:
+Optional — no model gets one unless you ask. Aim at it and:
 
 ```bash
 /bdpaste label <#ff8800>Shop
@@ -327,231 +324,229 @@ Optional — ohne Zutun bekommt kein Modell eines. Anvisieren und:
 /bdpaste label off
 ```
 
-Der Text ist **MiniMessage**, also gehen Hex-Farben, Verläufe, Fett, Hover — alles. Ohne
-Argument zeigt der Befehl, was gerade dransteht, und wie es gerendert aussieht.
+The text is **MiniMessage**, so hex colours, gradients, bold, hover — all of it works. Without an
+argument the command shows what is currently on it, and what that renders to.
 
-Ein Tag, das MiniMessage nicht kennt, wird **nicht abgelehnt**, sondern bleibt als Text stehen.
-Es gibt also nichts zu validieren; wenn eine Farbe nicht greift, siehst du das direkt an der
-Bestätigung, die dir das gerenderte Ergebnis zurückschreibt.
+A tag MiniMessage does not recognise is **not rejected** — it stays on screen as plain text.
+There is nothing to validate, then; if a colour does not take, you see it straight away in the
+confirmation, which writes the rendered result back to you.
 
-Das Schild hängt über **dem Teil, das im Ruhezustand die Oberkante bildet** — bei allem
-Menschenähnlichen also der Kopf. Es dreht sich zum Betrachter, wird bei `move` und `replace`
-mitgenommen und verschwindet mit dem Modell.
+The label hangs over **the part that forms the top of the resting model** — on anything
+human-shaped, the head. It turns to face whoever is looking, is carried along by `move` and
+`replace`, and goes away with the model.
 
-Über dem Kopf und nicht über der Mitte des ganzen Modells, weil die Mitte nicht dort liegt, wo
-man sie vermutet: der Farmer hält eine Mistgabel zur Seite, was die Mitte einen Viertelblock von
-seinem Kopf wegzieht. Und erst recht nicht über der gespeicherten Bounding-Box — die umfasst
-alles, was das Modell im Lauf seiner Animation überstreicht, und weil der Farmer einen Heuballen
-sechs Blöcke weit wirft, läge ihr Mittelpunkt 2,6 Blöcke neben ihm auf freiem Feld.
+Over the head and not over the middle of the whole model, because the middle is not where you
+would think: the farmer holds a pitchfork out to one side, which drags the middle a quarter of a
+block away from his head. And certainly not over the stored bounding box — that covers everywhere
+the model reaches across its animation, and because the farmer throws a hay bale six blocks, its
+centre would be 2.6 blocks away from him in an empty field.
 
-### Höhe nachjustieren
+### Adjusting the height
 
 ```bash
 /bdpaste label raise -0.8
 ```
 
-Negativ senkt, positiv hebt. Wird pro Modell gespeichert und bei `move` und `replace`
-mitgenommen.
+Negative lowers it, positive raises it. Stored per model and carried along by `move` and
+`replace`.
 
-Das braucht es, weil sich die Höhe eines Modells nicht exakt ausrechnen lässt: ein
-Item-Display ist von einem Einheitswürfel begrenzt, aber wie viel davon das Item wirklich
-ausfüllt, entscheidet dessen eigenes Modell — ein Spielerkopf nutzt die Hälfte. Die
-automatische Höhe ist also eine Schätzung nach oben, und `raise` korrigiert sie einmal.
+It is needed because how tall a model looks cannot be worked out exactly: an item display is
+bounded by a unit cube, but how much of that cube the item actually fills is up to the item's own
+model — a player head uses half of it. The automatic height is therefore an estimate on the high
+side, and `raise` corrects it once.
 
-### Während der Animation
+### During the animation
 
-Das Schild folgt seinem Teil in **alle drei Richtungen**, nicht nur in der Höhe. Das ist bei
-Modellen, die sich von der Stelle bewegen, der ganze Unterschied: der Kopf der Ratte legt in
-einer Runde ihres Tanzes 2,3 Blöcke zurück, und ein Name, der nur mit der Höhe mitgeht, bleibt
-dabei einfach stehen.
+The label follows its part in **all three directions**, not just in height. On models that move
+away from the spot that is the whole difference: the rat's head travels 2.3 blocks in one round
+of its dance, and a name that only follows the height simply stays behind.
 
-Verfolgt wird der **Ursprung** des Teils, nicht die Oberkante seiner Box, und der Abstand
-zwischen beiden steht schon beim Start fest. Das ist der Grund, warum nichts mehr zittert: die
-Box eines Displays ist achsenparallel, also misst sie sich höher, sobald sich das Teil darin
-dreht — beim Farmer um 0,32 Blöcke, während sein Hut sich nur neigt. Wer die Höhe jede Runde neu
-an der Box abliest, überträgt dieses Atmen aufs Schild.
+What is tracked is the part's **origin**, not the top of its box, and the distance between the
+two is fixed at the start. That is why nothing trembles any more: a display's box is axis
+aligned, so it measures taller the moment the part inside it turns — by 0.32 blocks on the
+farmer, while his hat only tilts. Reading the height off the box every round passes that
+breathing on to the label.
 
-Nach `animate off` sitzt es wieder über der Ruhepose.
+After `animate off` it sits over the resting pose again.
 
-Aussehen über die `config.yml`:
+Appearance through `config.yml`:
 
 ```yaml
 label:
-  height: 0.4              # Abstand über dem Modell
+  height: 0.4              # gap above the model
   scale: 1.0
   shadow: true
-  see-through: false       # durch Wände sichtbar
-  background: "#40000000"  # #aarrggbb, sechs Stellen = deckend, #00000000 = keins
+  see-through: false       # visible through walls
+  background: "#40000000"  # #aarrggbb, six digits = opaque, #00000000 = none
   view-range: 1.0
   follow-animation: true
 ```
 
-## Bereits platzierte Modelle ändern
+## Changing models that are already placed
 
-**Duplizieren** — anvisieren, Kopie bekommen, absetzen. Das Original bleibt, wo es ist:
+**Duplicate** — aim at one, get a copy, put it down. The original stays where it is:
 
 ```bash
 /bdpaste duplicate
 ```
 
-Die Kopie startet mit allen Werten des Originals und hängt sofort am Fadenkreuz. Fremde
-Modelle darfst du kopieren — du änderst sie ja nicht.
+The copy starts with every value of the original and hangs off your crosshair straight away. You
+may copy other people's models — you are not changing them.
 
-**Am Stück platzieren** — nach jedem Absetzen kommt sofort die nächste Kopie:
+**Placing in a row** — after every drop the next copy comes up immediately:
 
 ```bash
 /bdpaste repeat on
 ```
 
-Damit setzt du eine ganze Reihe, ohne zwischendurch einen Befehl zu tippen. Beenden mit
-`/bdpaste repeat off`, `/bdpaste cancel` oder Shift+Q. Die Actionbar zeigt `repeat`, und die
-Einstellung wird gemerkt.
+That lets you set a whole row without typing a command in between. End it with
+`/bdpaste repeat off`, `/bdpaste cancel` or Shift+Q. The action bar shows `repeat`, and the
+setting is remembered.
 
-Ein `move` wiederholt nie — sonst würde daraus unbemerkt ein Duplizieren.
+A `move` never repeats — that would quietly turn it into a duplicate.
 
-**Verschieben** — anvisieren, aufnehmen, bearbeiten:
+**Move** — aim at one, pick it up, edit it:
 
 ```bash
 /bdpaste move
 ```
 
-Das Modell **bleibt stehen, wo es steht**, und startet eingefroren. Du kannst also direkt
-Drehung, Größe oder Offset nachbessern, ohne alles neu anvisieren zu müssen. Erst **F**
-übergibt es wieder an dein Fadenkreuz, wenn du es tatsächlich woanders hin willst.
+The model **stays where it stands** and starts out frozen. So you can go straight to fixing the
+rotation, the size or an offset without having to aim at it all over again. Only **F** hands it
+back to your crosshair, for when you actually want it somewhere else.
 
-Mitgenommen werden **alle** Werte: Yaw, Pitch, Roll, Scale und Offset X/Y/Z.
+**Every** value comes along: yaw, pitch, roll, scale and offset X/Y/Z.
 
-Brichst du ab (Q oder `/bdpaste cancel`), landet das Modell exakt dort wieder, wo es war —
-auch wenn du dich mittendrin ausloggst oder der Server heruntergefahren wird.
+If you cancel (Q or `/bdpaste cancel`), the model ends up exactly where it was — even if you log
+out halfway through, or the server shuts down.
 
-**Austauschen** — gleiche Position, gleiche Drehung, gleiche Größe, anderes Modell:
+**Replace** — same position, same rotation, same size, different model:
 
 ```bash
 /bdpaste replace mater
 ```
 
-Das geht sofort, ohne Platzierungsmodus. Ist der Modellname falsch, passiert nichts —
-geladen wird zuerst, gelöscht erst danach.
+This happens straight away, without placement mode. If the model name is wrong nothing happens —
+the new one is loaded first, the old one deleted only afterwards.
 
-> Modelle, die du **vor** dieser Version platziert hast, kennen ihren Dateinamen noch nicht
-> (nur den Anzeigenamen). Bei denen schlägt `move`/`replace` mit „No model called …" fehl —
-> einmal `/bdpaste remove` und neu setzen, dann passt es.
+> Models you placed **before** this version do not know their own filename yet (only the display
+> name). On those, `move`/`replace` fails with "No model called …" — one `/bdpaste remove` and
+> placing it again sorts it out.
 
-## Alle Befehle
+## Every command
 
-Basis: `/bdpaste` (Aliase `/bde`, `/bdp`)
+Base: `/bdpaste` (aliases `/bde`, `/bdp`)
 
-| Befehl | Beschreibung | Permission |
+| Command | Description | Permission |
 |---|---|---|
-| `list` | verfügbare Modelldateien | `bdpaste.use` |
-| `inspect <modell>` | Datei parsen ohne zu spawnen: Teileanzahl, Typen, Maße, häufigste Blöcke | `bdpaste.use` |
-| `place <modell>` | Platzierungsmodus starten | `bdpaste.place` |
-| `duplicate` | Kopie des anvisierten Modells aufnehmen | `bdpaste.place` |
-| `repeat [on\|off]` | nach dem Absetzen gleich weiterplatzieren | `bdpaste.use` |
-| `freeze` | Vorschau einfrieren/lösen (wie F) | `bdpaste.use` |
-| `snap [off\|pixel\|block]` | Raster umschalten | `bdpaste.use` |
-| `pause` / `resume` | Platzierungsmodus kurz verlassen und zurückkehren | `bdpaste.use` |
-| `step [zahl\|reset] [wert]` | Schrittweiten anzeigen, setzen oder zurücksetzen | `bdpaste.use` |
-| `move` | anvisiertes Modell wieder aufnehmen und woanders absetzen | `bdpaste.place` |
-| `replace <modell>` | anvisiertes Modell gegen ein anderes tauschen, gleiche Stelle | `bdpaste.place` |
-| `set <wert> <zahl>` | exakten Wert setzen (während des Platzierens) | `bdpaste.place` |
-| `cancel` | Platzierung abbrechen | `bdpaste.use` |
-| `undo` | zuletzt platziertes Modell entfernen | `bdpaste.remove` |
-| `remove` | das anvisierte Modell entfernen | `bdpaste.remove` |
-| `delete <id>` | Modell per ID entfernen | `bdpaste.remove` |
-| `animate [name] [tempo] [once\|loop\|off]` | Animation des Modells abspielen | `bdpaste.place` |
-| `label <text\|raise <n>\|off>` | Schwebender Name über dem Modell, MiniMessage | `bdpaste.place` |
-| `info` | Details zum anvisierten Modell | `bdpaste.use` |
-| `near [radius]` | platzierte Modelle in der Nähe auflisten | `bdpaste.use` |
-| `tp <id>` | zu einem Modell teleportieren | `bdpaste.admin` |
-| `import <url-oder-id> [name]` | Von block-display.com oder direktem Link holen | `bdpaste.import` |
-| `hitbox [on\|off\|sync]` | Modell anklickbar machen (für die API) | `bdpaste.admin` |
-| `cleanup <radius>` | **alle** BDPaste-Displays im Umkreis löschen | `bdpaste.admin` |
-| `reload` | Config neu laden, Modell-Cache leeren | `bdpaste.admin` |
+| `list` | available model files | `bdpaste.use` |
+| `inspect <model>` | parse the file without spawning: part count, types, size, most common blocks | `bdpaste.use` |
+| `place <model>` | start placement mode | `bdpaste.place` |
+| `duplicate` | pick up a copy of the model you are aiming at | `bdpaste.place` |
+| `repeat [on\|off]` | keep placing after each drop | `bdpaste.use` |
+| `freeze` | freeze/unfreeze the preview (same as F) | `bdpaste.use` |
+| `snap [off\|pixel\|block]` | switch the grid | `bdpaste.use` |
+| `pause` / `resume` | leave placement mode for a moment and come back | `bdpaste.use` |
+| `step [number\|reset] [value]` | show, set or reset step sizes | `bdpaste.use` |
+| `move` | pick the model you are aiming at back up and put it elsewhere | `bdpaste.place` |
+| `replace <model>` | swap the model you are aiming at for another, same spot | `bdpaste.place` |
+| `set <value> <number>` | set an exact value (while placing) | `bdpaste.place` |
+| `cancel` | abort the placement | `bdpaste.use` |
+| `undo` | remove the model placed last | `bdpaste.remove` |
+| `remove` | remove the model you are aiming at | `bdpaste.remove` |
+| `delete <id>` | remove a model by id | `bdpaste.remove` |
+| `animate [name] [speed] [once\|loop\|off]` | play the model's animation | `bdpaste.place` |
+| `label <text\|raise <n>\|off>` | floating name over the model, MiniMessage | `bdpaste.place` |
+| `info` | details about the model you are aiming at | `bdpaste.use` |
+| `near [radius]` | list placed models nearby | `bdpaste.use` |
+| `tp <id>` | teleport to a model | `bdpaste.admin` |
+| `import <url-or-id> [name]` | fetch from block-display.com or a direct link | `bdpaste.import` |
+| `hitbox [on\|off\|sync]` | make a model clickable (for the API) | `bdpaste.admin` |
+| `cleanup <radius>` | delete **every** BDPaste display within the radius | `bdpaste.admin` |
+| `reload` | reload the config, clear the model cache | `bdpaste.admin` |
 
-Alle Permissions stehen per Default auf `op`; `bdpaste.*` fasst sie zusammen.
+Every permission defaults to `op`; `bdpaste.*` covers the lot.
 
-## Wie Modelle gefunden und entfernt werden
+## How models are found and removed
 
-Display-Entities haben keine Hitbox, man kann sie also nicht anklicken. BDPaste speichert
-darum beim Platzieren die Bounding-Box in `plugins/BDPaste/placements.yml` und macht bei
-`/bdpaste remove` einen Raycast gegen diese gespeicherten Boxen. Zusätzlich trägt jede
-Entity ihre Modell-ID im PersistentDataContainer und den Scoreboard-Tag `bdpaste` — falls
-mal etwas verwaist, räumt `/bdpaste cleanup <radius>` auf.
+Display entities have no hitbox, so you cannot click one. BDPaste therefore stores the bounding
+box in `plugins/BDPaste/placements.yml` when a model is placed, and `/bdpaste remove` ray casts
+against those stored boxes. On top of that, every entity carries its model id in its
+PersistentDataContainer and the scoreboard tag `bdpaste` — if something is ever orphaned,
+`/bdpaste cleanup <radius>` clears it out.
 
-Diese Box ist das **ruhende** Modell. Nicht die Fläche, die es im Lauf seiner Animationen
-überstreicht: der Farmer wirft einen Heuballen sechs Blöcke weit, also wäre die 8,4 Blöcke
-breit statt der 3,0, in denen er wirklich steht.
+That box is the **resting** model. Not the area it sweeps across its animations: the farmer
+throws a hay bale six blocks, so that would be 8.4 blocks wide instead of the 3.0 he actually
+stands in.
 
-Was eine Animation darüber hinauswirft, bleibt bewusst draußen: du klickst den Farmer an,
-nicht den Ballen, der gerade durch die Luft fliegt.
+What an animation throws beyond it stays outside on purpose: you click the farmer, not the bale
+that happens to be in mid-air.
 
-Boxen aus älteren Versionen tragen noch die alten Maße. Die werden beim Serverstart neu
-vermessen, sobald ihr Chunk geladen ist — von selbst, es ist nichts zu tun. `/bdpaste
-hitbox sync` stößt dasselbe von Hand an.
+Boxes from older versions still carry the old numbers. They are measured again at server start as
+soon as their chunk is loaded — by themselves, there is nothing to do. `/bdpaste hitbox sync`
+kicks off the same thing by hand.
 
-### Mehrere Boxen statt einer großen
+### Several boxes instead of one big one
 
-Eine `interaction`-Entity kennt nur **eine** Breite für beide horizontalen Achsen. Ihre
-Grundfläche ist also immer quadratisch, egal welche Form das Modell hat — und um alles
-Längliche herum ist das überwiegend Luft. Stitch ist 2,57 × 1,12 Blöcke; ein Quadrat darum
-ist 2,57 × 2,57, also mehr als doppelt so viel Fläche, wie er einnimmt.
+An `interaction` entity has only **one** width for both horizontal axes. Its footprint is
+therefore always square, whatever shape the model is — and around anything long that is mostly
+air. Stitch is 2.57 × 1.12 blocks; a square around him is 2.57 × 2.57, more than twice the area
+he takes up.
 
-Deshalb bekommt ein längliches Modell **mehrere** Boxen, der Länge nach aufgereiht. Jede
-wächst um die Teile, deren Mitte in ihren Abschnitt fällt, sodass jedes Teil vollständig in
-genau einer Box liegt. Eine Lücke mitten im Modell bleibt dabei eine Lücke.
+So a long model gets **several** boxes, laid down its length. Each grows around the parts whose
+middle falls into its stretch, so every part lies completely inside exactly one box. A gap in the
+middle of a model stays a gap.
 
-Durchgerechnet werden alle Aufteilungen bis `max-boxes`, und die einzelne Box tritt mit an.
-Gewinnt die kleinste — die Boxen können also nie lockerer werden als vorher, nur enger:
+Every split up to `max-boxes` is worked out, and the single box is one of the candidates. The
+smallest wins — so the boxes can never come out looser than before, only tighter:
 
 ```
-Modell         Sweep-Box    Ruhe-Box       jetzt   Boxen
-Fermier           268,51       25,90       17,36   2
-rat                12,75        1,73        0,49   2
-stitch             17,05       15,78        3,74   3
-dance             359,56      292,50       53,61   8
-rush-e           3880,83     3880,83      803,08   5
+Model          sweep box    rest box         now   boxes
+Fermier           268.51       25.90       17.36   2
+rat                12.75        1.73        0.49   2
+stitch             17.05       15.78        3.74   3
+dance             359.56      292.50       53.61   8
+rush-e           3880.83     3880.83      803.08   5
 ```
 
-(in Kubikblöcken, alle Testmodelle zusammen: 4851 → 921)
+(in cubic blocks; all test models together: 4851 → 921)
 
-`interaction.padding` steht auf `0.0` — die Box ist das Modell. Höher heißt großzügiger beim
-Zielen, kostet aber mehr, als es aussieht: 0,15 rundherum verdoppelt bei der Ratte das
-anklickbare Volumen.
+`interaction.padding` is `0.0` — the box is the model. Higher means more forgiving to aim at, but
+it costs more than it looks: 0.15 all round doubles the clickable volume on the rat.
 
-Manche Modelle bleiben groß, weil sie groß sind: RUSH E ist eine Notenrolle über 18,7 Blöcke,
-`dance` verteilt 216 Teile über 10.
+Some models stay big because they are big: RUSH E is a note roll spanning 18.7 blocks, and
+`dance` spreads 216 parts over 10.
 
-## Konfiguration
+## Configuration
 
-`config.yml` ist kommentiert. Die wichtigsten Stellschrauben:
+`config.yml` is commented. The knobs that matter most:
 
-- `max-parts` (Standard 6000) — Obergrenze für Display-Entities pro Modell. Jedes Teil ist
-  eine echte Entity, große Modelle kosten echte Serverleistung.
-- `spawn-per-tick` (250) — runterdrehen, wenn große Modelle beim Platzieren einen Lag-Spike geben.
-- `placement.pivot` — `CENTER` (Standard, Modellmitte unten auf dem Cursor) oder `ORIGIN`
-  (BDEngine-Nullpunkt auf dem Cursor, rastet sauber ins Blockraster).
-- `placement.surface-reach` (32) — wie weit das Fadenkreuz nach einer Oberfläche sucht.
-  Darüber hinaus schwebt das Modell in `default-distance` Entfernung.
-- `display.view-range` — hochsetzen, wenn große Modelle zu früh ausgeblendet werden.
-- `display.force-brightness` — überschreibt die im Modell gespeicherte Helligkeit.
+- `max-parts` (default 6000) — ceiling on display entities per model. Every part is a real
+  entity, and large models cost real server performance.
+- `spawn-per-tick` (250) — turn it down if large models cause a lag spike while placing.
+- `placement.pivot` — `CENTER` (default, the bottom middle of the model on the cursor) or
+  `ORIGIN` (the BDEngine origin on the cursor, which lines up cleanly with the block grid).
+- `placement.surface-reach` (32) — how far the crosshair looks for a surface. Beyond that the
+  model floats at `default-distance`.
+- `display.view-range` — raise it if large models are hidden too early.
+- `display.force-brightness` — overrides the brightness stored in the model.
 
-## Selbst bauen
+## Building it yourself
 
-Braucht **JDK 25** (Paper 26.2 ist gegen Java 25 kompiliert, JDK 21 reicht nicht):
+Needs **JDK 25** (Paper 26.2 is compiled against Java 25; JDK 21 will not do):
 
 ```bash
 mvn clean package
 ```
 
-Ergebnis: `target/BDPaste-1.0.0.jar`.
+Result: `target/BDPaste-1.0.0.jar`.
 
-## Für Entwickler
+## For developers
 
-BDPaste bringt eine API mit, damit andere Plugins auf platzierte Modelle reagieren können —
-etwa: Modell anklicken, Animation startet.
+BDPaste ships an API so other plugins can react to placed models — click a model, start an
+animation, that sort of thing.
 
-### Anbinden
+### Hooking in
 
 `plugin.yml`:
 
@@ -559,7 +554,7 @@ etwa: Modell anklicken, Animation startet.
 softdepend: [BDPaste]
 ```
 
-Holen über den Services Manager:
+Fetch it through the services manager:
 
 ```java
 RegisteredServiceProvider<BdPasteApi> provider =
@@ -567,17 +562,17 @@ RegisteredServiceProvider<BdPasteApi> provider =
 BdPasteApi bdpaste = provider == null ? null : provider.getProvider();
 ```
 
-Der Null-Check bleibt — auf einem Server ohne BDPaste soll dein Plugin weiterlaufen.
+Keep the null check — your plugin should carry on running on a server without BDPaste.
 
-### Klicks
+### Clicks
 
-Damit ein Modell überhaupt anklickbar ist, braucht es eine **Hitbox**. Display-Entities haben
-in Vanilla keine, daran lässt sich mit Plugin-Code nichts ändern. BDPaste setzt deshalb pro
-Modell eine oder mehrere unsichtbare `interaction`-Entities — standardmäßig bei jedem neu
-platzierten Modell, steuerbar über `interaction.enabled` und `/bdpaste hitbox`.
+For a model to be clickable at all it needs a **hitbox**. Display entities have none in vanilla,
+and no amount of plugin code changes that. BDPaste therefore puts one or more invisible
+`interaction` entities around each model — by default on every newly placed one, controlled by
+`interaction.enabled` and `/bdpaste hitbox`.
 
-`/bdpaste hitbox off` wird beim Modell gespeichert und übersteht damit einen Neustart. Vorher
-tat es das nicht: die Box wurde beim nächsten Start einfach neu gesetzt.
+`/bdpaste hitbox off` is stored on the model and survives a restart. It did not before: the box
+was simply put back at the next start.
 
 ```java
 @EventHandler
@@ -585,68 +580,68 @@ public void onClick(BdModelClickEvent event) {
     if (event.getAction() != BdModelClickEvent.Action.RIGHT) return;
     if (!event.getModel().source().equalsIgnoreCase("shop")) return;
 
-    event.setCancelled(true);   // BDPaste soll den Klick nicht selbst verwerten
+    event.setCancelled(true);   // stop BDPaste from acting on the click itself
     openShop(event.getPlayer());
 }
 ```
 
-Ohne `setCancelled(true)` macht BDPaste danach noch das, was in der `config.yml` unter
-`interaction.right-click` bzw. `left-click` steht:
+Without `setCancelled(true)`, BDPaste goes on to do whatever `interaction.right-click` or
+`left-click` says in `config.yml`:
 
-| Wert | Verhalten |
+| Value | Behaviour |
 |---|---|
-| `NONE` | nichts, nur das Event |
-| `TOGGLE` | Animation starten, bzw. stoppen wenn sie läuft |
-| `CYCLE` | zur nächsten Animation weiterschalten, nach der letzten zurück auf Stillstand |
+| `NONE` | nothing, just the event |
+| `TOGGLE` | start the animation, or stop it if it is running |
+| `CYCLE` | step to the next animation, and past the last one back to standing still |
 
-`CYCLE` ist die Voreinstellung für Rechtsklick. Ein Modell mit zwei Animationen geht damit
-`labourer` → `talking` → aus → `labourer`, ganz ohne eigenen Code.
+`CYCLE` is the default for right click. A model with two animations then goes
+`labourer` → `talking` → off → `labourer`, without a line of your own code.
 
-### Welche Animation läuft gerade
+### Which animation is running
 
 ```java
-String now = bdpaste.currentAnimation(model.id()).orElse("nichts");
+String now = bdpaste.currentAnimation(model.id()).orElse("nothing");
 ```
 
-Das ist der **Live-Zustand**. Nach einem Einmal-Durchlauf wird es wieder leer, während
-`model.animationName()` weiterhin die zuletzt gestartete nennt — nützlich, wenn du wissen
-willst, was es zuletzt gemacht hat, aber eine andere Frage.
+That is the **live state**. After a one-shot it goes empty again, while `model.animationName()`
+still names the one started last — useful if you want to know what it did last, but a different
+question.
 
-Die vorhandenen Animationen listet `animations(...)` auf; das muss die Modelldatei lesen und
-antwortet deshalb per Callback.
+The animations a model carries are listed by `animations(...)`; that has to read the model file
+and therefore answers through a callback.
 
-### Einmal statt Dauerschleife
+### Once instead of on a loop
 
-`loop = false` spielt die Animation einmal durch und lässt das Modell in der Endpose stehen —
-eine Tür, die aufgeht, bleibt offen. Das macht der Editor genauso: sein Export ohne Schleife
-übergibt am Ende an `stop_anim`, und das pausiert nur.
+`loop = false` plays the animation through once and leaves the model in its end pose — a door
+that swings open stays open. The editor does the same: its export without a loop hands over to
+`stop_anim` at the end, and that only pauses.
 
 ```java
 bdpaste.play(model, "open", 1.0, false, ok -> { });
 ```
 
-Zurück in die Ruhepose bringt es `stop(id)` bzw. `/bdpaste animate off`.
+`stop(id)` or `/bdpaste animate off` puts it back into its resting pose.
 
-Ein Einmal-Durchlauf wird **nicht** als laufend vermerkt: er startet nach einem Serverneustart
-nicht von selbst wieder, und `isAnimating` wird `false`, sobald er durch ist. Genau daran
-erkennst du, dass er fertig ist.
+A one-shot is **not** written down as running: it does not start itself again after a server
+restart, and `isAnimating` goes `false` once it is through. That is exactly how you can tell it
+has finished.
 
-Für die eingebauten Klick-Aktionen steuert das `interaction.loop` in der `config.yml`.
+For the built-in click actions, `interaction.loop` in `config.yml` controls this.
 
-### Welches Modell ist es?
+### Which model is it?
 
-`Placement` trägt drei Kennungen, und die verwechselt man leicht:
+`Placement` carries three identifiers, and they are easy to mix up:
 
-| | Beispiel | wofür |
+| | Example | What for |
 |---|---|---|
-| `source()` | `fermier` | Dateiname im Models-Ordner — zum **Filtern nach Modellart** |
-| `model()` | `Fermier` | Anzeigename; meist gleich, bei älteren block-display-Importen der Titel von der Seite |
-| `id()` | `3a97fd42-…` | die einzelne platzierte Kopie |
+| `source()` | `fermier` | filename in the models folder — for **filtering by kind of model** |
+| `model()` | `Fermier` | display name; usually the same, but on older block-display imports it is the title from the page |
+| `id()` | `3a97fd42-…` | this one placed copy |
 
-Zum Filtern nimm `source()` und `equalsIgnoreCase` — `model()` kann sich in der Großschreibung
-unterscheiden. Welche Werte ein Modell hat, zeigt `/bdpaste info`, während du es anvisierst.
+For filtering use `source()` with `equalsIgnoreCase` — `model()` can differ in capitalisation.
+`/bdpaste info` shows a model's values while you aim at it.
 
-### Wann ist die Animation zu Ende
+### When the animation is over
 
 ```java
 bdpaste.play(model, "open", 1.0, false,
@@ -656,20 +651,19 @@ bdpaste.play(model, "open", 1.0, false,
         });
 ```
 
-Der zweite Callback läuft **einmal**, auf dem Main-Thread, egal wie es ausgegangen ist:
+The second callback runs **once**, on the main thread, however it turned out:
 
 | `Reason` | |
 |---|---|
-| `FINISHED` | durchgelaufen — nur bei `loop = false`; das Modell behält die Endpose |
-| `STOPPED` | jemand hat gestoppt: `animate off`, `stop()`, ein Klick, oder eine andere Animation hat übernommen |
-| `GONE` | die Entities sind weg — Chunk entladen oder Modell entfernt |
+| `FINISHED` | played through — only with `loop = false`; the model keeps its end pose |
+| `STOPPED` | somebody stopped it: `animate off`, `stop()`, a click, or another animation took over |
+| `GONE` | the entities are gone — chunk unloaded or model removed |
 
-`GONE` ist der Grund, warum es nicht nur einen „fertig"-Callback gibt: ein Einmal-Durchlauf in
-einem Chunk, der auf halber Strecke entlädt, wird nie fertig, und du würdest ewig auf ein
-Signal warten, das nur im Erfolgsfall käme.
+`GONE` is why there is not just a "done" callback: a one-shot in a chunk that unloads halfway
+never finishes, and you would wait forever for a signal that only came on success.
 
-Willst du von **jeder** Animation auf dem Server hören, auch von denen, die ein Spieler mit
-`/bdpaste animate` gestartet hat, nimm stattdessen das Event:
+If you would rather hear about **every** animation on the server, including the ones a player
+started with `/bdpaste animate`, use the event instead:
 
 ```java
 @EventHandler
@@ -680,16 +674,16 @@ public void onEnd(BdAnimationEndEvent event) {
 }
 ```
 
-### Weitere Events
+### The other events
 
-| Event | Wann | Abbrechbar |
+| Event | When | Cancellable |
 |---|---|---|
-| `BdModelClickEvent` | Spieler klickt ein Modell | ja — unterdrückt BDPastes eigene Aktion |
-| `BdAnimationEndEvent` | Animation hört auf zu laufen | nein |
-| `BdModelPlaceEvent` | Modell steht (auch nach `move`/`replace`) | nein |
-| `BdModelRemoveEvent` | Modell soll entfernt werden | ja — es bleibt stehen |
+| `BdModelClickEvent` | a player clicks a model | yes — suppresses BDPaste's own action |
+| `BdAnimationEndEvent` | an animation stops running | no |
+| `BdModelPlaceEvent` | a model is standing (also after `move`/`replace`) | no |
+| `BdModelRemoveEvent` | a model is about to be removed | yes — it stays where it is |
 
-### Was die API kann
+### What the API can do
 
 ```java
 List<Placement>       models();
@@ -720,12 +714,12 @@ boolean  hasHitbox(Placement model);
 boolean  setHitbox(Placement model, boolean enabled);
 ```
 
-Alles Main-Thread. Die Methoden, die eine Modelldatei von der Platte lesen müssen
-(`animations`, `play`, `place`), arbeiten mit Callbacks statt zu blockieren — die Callbacks
-kommen auf dem Main-Thread zurück, du darfst darin also Entities anfassen. Und sie kommen
-immer in einem späteren Tick, auch bei einem Modellnamen, den es gar nicht gibt.
+All main thread. The methods that have to read a model file off the disk (`animations`, `play`,
+`place`) take callbacks instead of blocking — the callbacks come back on the main thread, so you
+may touch entities inside them. And they always come on a later tick, even for a model name that
+does not exist.
 
-Beispiel: alle Bauern im Umkreis auf `talking` umschalten.
+Example: switch every farmer nearby to `talking`.
 
 ```java
 for (Placement model : bdpaste.modelsNear(location, 32)) {
@@ -735,10 +729,9 @@ for (Placement model : bdpaste.modelsNear(location, 32)) {
 }
 ```
 
-### Modelle platzieren
+### Placing models
 
-Seit **API-Version 7** kann ein Plugin Modelle selbst setzen — ohne dass ein Spieler
-danebensteht:
+Since **API version 7** a plugin can put models down by itself, with no player standing there:
 
 ```java
 bdpaste.place("fermier", spot,
@@ -746,32 +739,32 @@ bdpaste.place("fermier", spot,
         reason -> sender.sendMessage(reason));
 ```
 
-`source` ist der Bibliotheksname, also der Dateiname im Models-Ordner ohne Endung — dasselbe,
-was `/bdpaste place` nimmt und was `libraryModels()` auflistet. Die lange Form nimmt zusätzlich
-`yaw` (Grad im Uhrzeigersinn ab Süden) und `scale` (Faktor auf die Modellgröße, 1 = unverändert).
+`source` is the library name — the filename in the models folder without its extension, the same
+thing `/bdpaste place` takes and the same thing `libraryModels()` lists. The long form also takes
+`yaw` (degrees clockwise from south) and `scale` (a multiplier on the model's own size, 1 leaves
+it alone).
 
-Das Modell steht dann wie jedes andere: es kommt in die Registry, übersteht einen Neustart,
-ist anklickbar, und `BdModelPlaceEvent` feuert dafür. Es hat **keinen Besitzer**, also darf es
-im Spiel nur jemand mit `bdpaste.admin` verschieben oder entfernen.
+The model then stands like any other: it goes into the registry, survives a restart, is
+clickable, and `BdModelPlaceEvent` fires for it. It has **no owner**, so in game only somebody
+with `bdpaste.admin` may move or remove it.
 
-Pitch, Roll und die Feinversätze gibt es hier bewusst nicht: die sind zum Zurechtrücken einer
-Vorschau nach Augenmaß da. Wer Modelle aus einer Config setzt, will einen Punkt und eine
-Blickrichtung, keine sieben Zahlen.
+Pitch, roll and the fine offsets are deliberately not here: those exist for nudging a preview
+into place by eye. Anything placing models from a config file wants a spot and a heading, not
+seven numbers.
 
-`failed` bekommt einen Text, den du direkt einem Spieler zeigen kannst — kein solches Modell,
-keine Welt, oder kein einziges Teil ließ sich spawnen.
+`failed` is handed a message you can show a player directly — no such model, no world, or not a
+single part could be spawned.
 
-`BdPasteApi.VERSION` steigt, sobald sich hier etwas ändert, das Aufrufer brechen könnte.
+`BdPasteApi.VERSION` goes up whenever something here changes in a way that could break a caller.
 
-## Bekannte Grenzen
+## Known limits
 
-- **Easing-Kurven** an einzelnen Keyframes (`curveFunc` im Editor) werden ignoriert —
-  zwischen zwei Keyframes wird linear interpoliert.
-- Die Vorschau beim Platzieren zeigt die **Ruhepose**; animiert wird erst nach dem Absetzen.
-- **Item-Displays ohne explizites `item_display` im Modell** bekommen den Modus aus
-  `display.item-display-transform` (Standard `NONE`). Sieht ein Kopf-Modell falsch skaliert
-  aus, ist `HEAD` meistens der richtige Wert.
-- **`paintTexture`** (bemalte Texturen aus BDEngine) wird ignoriert.
-- Unbekannte Blöcke/Items aus neueren oder älteren MC-Versionen werden durch Stein ersetzt;
-  das steht dann einmalig in der Server-Konsole.
-"# BDPaste" 
+- **Easing curves** on individual keyframes (`curveFunc` in the editor) are ignored — the
+  interpolation between two keyframes is linear.
+- The preview while placing shows the **resting pose**; animation starts once it is set down.
+- **Item displays without an explicit `item_display` in the model** get the mode from
+  `display.item-display-transform` (default `NONE`). If a head model looks wrongly scaled, `HEAD`
+  is usually the right value.
+- **`paintTexture`** (painted textures from BDEngine) is ignored.
+- Unknown blocks/items from newer or older MC versions are replaced with stone; that is noted in
+  the server console once.
