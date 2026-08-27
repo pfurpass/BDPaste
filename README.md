@@ -5,6 +5,8 @@ A Paper plugin that imports models from [bdengine.app](https://bdengine.app/) an
 
 Built against **Paper 26.2** (`paper-api 26.2.build.116-stable`, Java 25).
 
+[spigotmc](https://www.spigotmc.org/resources/bdpaste.138329/)
+
 ---
 
 ## Installation
