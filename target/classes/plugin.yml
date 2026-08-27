@@ -1,0 +1,45 @@
+name: BDPaste
+version: '1.0.0'
+main: de.phillip.bdpaste.BDPastePlugin
+api-version: '26.2'
+description: Import BDEngine models and place them in-world with your crosshair.
+website: https://bdengine.app/
+authors:
+  - Phillip
+folia-supported: false
+
+commands:
+  bdpaste:
+    description: Import and place BDEngine display-entity models.
+    usage: /bdpaste help
+    aliases: [bde, bdp]
+
+permissions:
+  bdpaste.use:
+    description: Access to /bdpaste and its read-only subcommands.
+    default: op
+  bdpaste.place:
+    description: Start placement mode and place models.
+    default: op
+  bdpaste.remove:
+    description: Undo and remove models.
+    default: op
+  bdpaste.import:
+    description: Download model files from a URL.
+    default: op
+  bdpaste.admin:
+    description: Reload, teleport, cleanup and edit other players' models.
+    default: op
+  bdpaste.interact:
+    description: Click placed models. Only checked if interaction.permission names it.
+    default: true
+  bdpaste.*:
+    description: Everything BDPaste offers.
+    default: op
+    children:
+      bdpaste.use: true
+      bdpaste.place: true
+      bdpaste.remove: true
+      bdpaste.import: true
+      bdpaste.admin: true
+      bdpaste.interact: true

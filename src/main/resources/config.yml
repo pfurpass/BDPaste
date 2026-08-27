@@ -1,0 +1,186 @@
+# BDPaste
+# Drop your BDEngine exports into plugins/BDPaste/models/ and run /bdpaste place <name>.
+# Supported files: .bdengine, .json, .txt / .mcfunction (summon commands), .zip (datapack export)
+
+# Refuse models with more display entities than this. Every part is a real entity,
+# so large models cost real server performance.
+max-parts: 6000
+
+# How many parts are spawned per tick while a preview is being built.
+# Lower this if placing big models causes a lag spike.
+spawn-per-tick: 250
+
+preview:
+  # Only the placing player sees the preview.
+  hide-from-others: true
+  # Interpolation ticks used while the preview follows the crosshair.
+  # 0 = snap instantly, 2-3 = smooth. Higher values feel laggy.
+  teleport-duration: 2
+
+placement:
+  # Fallback distance when you are not looking at a block.
+  default-distance: 5.0
+  # Upper limit for the distance value and for /bdpaste remove ray-tracing.
+  max-distance: 48.0
+  # How far the crosshair looks for a surface to stick to. Beyond this the model floats
+  # at the distance value instead. Raise it to place on far-away terrain.
+  surface-reach: 32.0
+  # Starting step sizes. In game, left click cycles a value through its own ladder and
+  # /bdpaste step <number> sets any size you like, so these are only the defaults.
+  # Degrees per scroll notch for yaw / pitch / roll. Ladder: 1, 5, 15, 45, 90
+  rotation-step: 15.0
+  # Scale is multiplied by this per scroll notch. Ladder: 1.01, 1.02, 1.05, 1.1, 1.25, 2
+  scale-step: 1.1
+  # Blocks per scroll notch for the offset values.
+  # Ladder: 0.03125, 0.0625, 0.125, 0.25, 0.5, 1
+  offset-step: 0.25
+  # How far the model origin gets rounded while it follows the crosshair:
+  #   BLOCK - whole blocks, lines up with the build grid
+  #   PIXEL - texture pixels, see pixel-snap below
+  #   OFF   - exactly where you point
+  # In game, Sneak + F cycles through the three.
+  snap: BLOCK
+  # Size of one PIXEL step. 0.0625 is 1/16 of a block, which is one texture pixel.
+  pixel-snap: 0.0625
+  # Start in surface mode (the model sticks to the block you are looking at).
+  surface-by-default: true
+  # What rotation and scale turn around:
+  #   CENTER - the middle of the model at its bottom sits on the crosshair (feels natural)
+  #   ORIGIN - the model origin as built in BDEngine sits on the crosshair (aligns to the grid)
+  # Either way the pivot stays glued to the crosshair while you scale and rotate.
+  pivot: CENTER
+
+display:
+  # Multiplier for the render distance of every spawned display.
+  # 1.0 is vanilla; raise it if large models disappear too early.
+  view-range: 1.0
+  # Fallback item display mode when a model does not specify one.
+  # NONE, THIRDPERSON_LEFTHAND, THIRDPERSON_RIGHTHAND, FIRSTPERSON_LEFTHAND,
+  # FIRSTPERSON_RIGHTHAND, HEAD, GUI, GROUND, FIXED
+  item-display-transform: NONE
+  # Ignore the brightness stored in the model and use the values below instead.
+  force-brightness: false
+  brightness-block: 15
+  brightness-sky: 15
+
+label:
+  # A floating name over a placed model, set with /bdpaste label. Nothing here spawns a label
+  # on its own - a model without one is exactly what it was before.
+
+  # Blocks between the top of the model and the text.
+  height: 0.4
+
+  # Size of the text. 1.0 is what a normal nametag looks like.
+  scale: 1.0
+
+  # Drop shadow behind the glyphs, and whether the text shows through walls.
+  shadow: true
+  see-through: false
+
+  # Background plate behind the text, as #aarrggbb - the leading pair is opacity. Six digits
+  # are taken as fully opaque, so #ff8800 is orange rather than invisible. #00000000 for none.
+  background: "#40000000"
+
+  # Multiplies the distance at which the label is still drawn.
+  view-range: 1.0
+
+  # Let the label ride the model while an animation plays, so it stays over it instead of
+  # hanging at the height the model happened to have when it was placed.
+  follow-animation: true
+
+interaction:
+  # Give every placed model a hitbox so it can be clicked. Without one a model cannot be
+  # clicked at all - display entities have no hitbox in vanilla - and BdModelClickEvent never
+  # fires. The hitbox is one invisible vanilla "interaction" entity per model, sized to its
+  # bounding box; turning this off removes them again.
+  enabled: true
+
+  # What a click does on its own. Other plugins get a BdModelClickEvent either way, and
+  # cancelling that event stops whatever is configured here.
+  #   NONE   - nothing, the event is all that happens
+  #   TOGGLE - start the animation, or stop it if it is already running
+  #   CYCLE  - step to the next animation, and past the last one back to standing still
+  right-click: CYCLE
+  left-click: NONE
+
+  # Leave empty to let everyone click. Set a node to restrict it, e.g. bdpaste.interact.
+  permission: ""
+
+  # Whether a click starts the animation on a loop. false plays it through once and leaves the
+  # model in the pose it ended in - what you want for a door swinging open or a chest lid.
+  loop: true
+
+  # Slack around each box, in blocks on every side. 0 means the box is the model. Raise it if
+  # you want clicks near an edge to be more forgiving - but note that an interaction entity is
+  # square whatever shape the model is, so padding costs more than it looks: 0.15 around a rat
+  # more than doubles the volume you can click on.
+  padding: 0.0
+
+  # How many boxes one model may be split into. An interaction entity has one width for both
+  # horizontal axes, so a single box around a long thin model is mostly air - a row of smaller
+  # ones hugs it far better. Only used where it actually comes out smaller, so lowering this
+  # can only make the boxes looser. 1 forces a single box.
+  max-boxes: 8
+
+animation:
+  # Play BDEngine keyframe animations on placed models (/bdpaste animate).
+  enabled: true
+
+  # Ticks between transform updates. The client eases across the gap, so this controls what the
+  # animation costs in packets, not how fast it runs. 1 sends a pose every tick and stays smooth
+  # even when a packet lands a tick late; 2 is what BDEngine does in its own datapacks and halves
+  # the traffic, at the price of the occasional hitch. Parts that did not move are skipped either
+  # way, which on a farmer is about a fifth of them.
+  update-interval: 1
+
+  # How many game ticks one keyframe lasts. BDEngine holds each keyframe for 0.1s, in the editor
+  # and in the datapacks it exports alike, so 2 is what makes a model run at the speed you built
+  # it at. Lower it to speed every animation up, or use /bdpaste animate <speed> for a single one.
+  ticks-per-keyframe: 2
+
+  # Play the note track a model carries alongside its animation. BDEngine keeps one per
+  # animation under listSound, and only project files have it - a datapack export bakes its
+  # sounds into functions, which BDPaste does not read.
+  sound: true
+
+  # Scales every note. 1.0 is what the model was built with; the sound plays at the model and
+  # fades with distance like anything else.
+  sound-volume: 1.0
+
+  # What to do with notes the editor put outside what Minecraft can play. The game gives you
+  # one octave either side of a sound's own note, the editor gives you as many as you like, so
+  # something has to give - you cannot have the right note, the right octave and the right
+  # timbre at once.
+  #   instrument - hand it to the note block sound that covers its octave (bass, guitar, harp,
+  #                flute, bell). Right note, right octave, different timbre.
+  #   octave     - keep the instrument and move the note by whole octaves until it fits. Same
+  #                timbre throughout, like the editor, but the bass ends up in the melody.
+  #   off        - send it as written and let the client flatten it. What BDEngine's own
+  #                datapack export does, and what a third of the notes get wrong.
+  sound-transpose: instrument
+
+  # With sound-transpose: instrument, which sound takes over a note that is too low or too high
+  # for its own. Both of these sit two octaves from the middle, so between them they reach three
+  # octaves either side and the note keeps its exact pitch - only the timbre changes.
+  #
+  # Two octaves down: bass, didgeridoo
+  # One octave down:  guitar
+  # One octave up:    flute, cow_bell
+  # Two octaves up:   bell, chime, xylophone
+  #
+  # The offset is known per instrument, so just naming a different one is enough - "chime" and
+  # "block.note_block.chime" both work. Worth trying by ear: flute whistles, bell rings, chime
+  # is softer, xylophone is wooden.
+  sound-low: bass
+  sound-high: bell
+
+  # Never animate more than this many models at once.
+  max-playing: 12
+
+  # Only animate while a player is within this many blocks.
+  activation-radius: 64.0
+
+downloads:
+  # Allow /bdpaste import <name> <url>.
+  enabled: true
+  max-size-mb: 25
