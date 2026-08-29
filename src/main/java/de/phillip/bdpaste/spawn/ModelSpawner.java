@@ -4,6 +4,8 @@ import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import de.phillip.bdpaste.BDPastePlugin;
 import de.phillip.bdpaste.model.BdPart;
+import de.phillip.bdpaste.model.Decompose;
+import de.phillip.bdpaste.model.Renames;
 import de.phillip.bdpaste.parse.Snbt;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -15,6 +17,7 @@ import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
+import org.bukkit.util.Transformation;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.TextDisplay;
@@ -48,29 +51,60 @@ public final class ModelSpawner {
         });
     }
 
+    /**
+     * Spawns one part and poses it.
+     *
+     * <p>The pose is set <em>after</em> the entity is in the world, not from inside the spawn
+     * callback with everything else. That callback runs while the entity is still being built,
+     * and how much of what you set there survives being added to the world is not the same on
+     * every server version - a model whose parts all came out unposed, stacked into a single
+     * cube, is what that looks like. Setting it afterwards is one call either way and cannot
+     * be undone by anything.</p>
+     *
+     * <p>No flicker from doing it late: the spawn and the pose leave for the client in the same
+     * tick, so it never sees the part untransformed.</p>
+     */
     public Entity spawnPart(Location location, BdPart part, Matrix4f matrix, boolean preview) {
-        Entity entity = switch (part.kind()) {
+        Display display = switch (part.kind()) {
             case BLOCK -> location.getWorld().spawn(location, BlockDisplay.class, d -> {
                 d.setBlock(blockDataOf(part.name()));
-                applyCommon(d, part, matrix, preview);
+                applyCommon(d, part, preview);
             });
             case ITEM -> location.getWorld().spawn(location, ItemDisplay.class, d -> {
                 d.setItemStack(itemStackOf(part));
-                d.setItemDisplayTransform(itemTransformOf(part.options()));
-                applyCommon(d, part, matrix, preview);
+                d.setItemDisplayTransform(itemTransformOf(part));
+                applyCommon(d, part, preview);
             });
             case TEXT -> location.getWorld().spawn(location, TextDisplay.class, d -> {
                 applyText(d, part);
-                applyCommon(d, part, matrix, preview);
+                applyCommon(d, part, preview);
             });
         };
-        return entity;
+        pose(display, matrix);
+        return display;
+    }
+
+    /**
+     * Poses a display, working the four values out here rather than leaving it to the server.
+     *
+     * <p>A display entity stores a translation, a rotation, a scale and a second rotation - not
+     * a matrix. {@code setTransformationMatrix} hands the server a matrix and lets it work those
+     * out, and that is where models fell apart: on some versions the decomposition gives up and
+     * returns no rotation and unit scale, which keeps every part's position and throws away its
+     * shape. A whole model then stacks into a single cube.</p>
+     *
+     * <p>{@link Decompose} does it the same way on every version, so the server is handed four
+     * finished numbers and has nothing left to get wrong.</p>
+     */
+    public static void pose(Display display, Matrix4f matrix) {
+        Decompose.Parts parts = Decompose.of(matrix);
+        display.setTransformation(new Transformation(
+                parts.translation(), parts.leftRotation(), parts.scale(), parts.rightRotation()));
     }
 
     // ------------------------------------------------------------- properties
 
-    private void applyCommon(Display display, BdPart part, Matrix4f matrix, boolean preview) {
-        display.setTransformationMatrix(new Matrix4f(matrix));
+    private void applyCommon(Display display, BdPart part, boolean preview) {
         display.setPersistent(!preview);
         display.setViewRange(plugin.settings().viewRange);
         display.addScoreboardTag(BDPastePlugin.TAG);
@@ -158,13 +192,31 @@ public final class ModelSpawner {
         try {
             return Bukkit.createBlockData(id);
         } catch (IllegalArgumentException ex) {
-            // Unknown or renamed block: strip the state and try the plain material.
+            // The block state was not understood. The block itself may still exist, so it is
+            // worth trying plain - but that gets the block's default state, which can look
+            // nothing like what the model asked for, so it is said out loud rather than
+            // quietly substituted.
             int bracket = id.indexOf('[');
+            String bare = bracket > 0 ? id.substring(0, bracket) : id;
+            String state = bracket > 0 ? id.substring(bracket) : "";
+
+            // Minecraft renamed it out from under the model - chain became iron_chain in
+            // 1.21.11 - so try what it is called now, or what it used to be called.
+            for (String other : Renames.alternatives(bare)) {
+                try {
+                    return Bukkit.createBlockData(other + state);
+                } catch (IllegalArgumentException keepLooking) {
+                    // not this one
+                }
+            }
+
             if (bracket > 0) {
                 try {
-                    return Bukkit.createBlockData(id.substring(0, bracket));
+                    BlockData plain = Bukkit.createBlockData(bare);
+                    plugin.warnBlockState(name, bare);
+                    return plain;
                 } catch (IllegalArgumentException ignored) {
-                    // fall through
+                    // fall through: the block does not exist either
                 }
             }
             plugin.warnUnknown("block", name);
@@ -178,6 +230,16 @@ public final class ModelSpawner {
         String bare = bracket > 0 ? part.name().substring(0, bracket) : part.name();
         String id = bare.startsWith("minecraft:") ? bare : "minecraft:" + bare;
         Material material = Material.matchMaterial(id);
+        if (material == null || material.isAir()) {
+            // Same story as the blocks: scute became turtle_scute in 1.21.1.
+            for (String other : Renames.alternatives(id)) {
+                Material renamed = Material.matchMaterial(other);
+                if (renamed != null && !renamed.isAir()) {
+                    material = renamed;
+                    break;
+                }
+            }
+        }
         if (material == null || material.isAir()) {
             if (part.headTexture() != null) {
                 material = Material.PLAYER_HEAD;
@@ -206,13 +268,51 @@ public final class ModelSpawner {
         }
     }
 
-    private ItemDisplay.ItemDisplayTransform itemTransformOf(Map<String, Object> nbt) {
-        String raw = Snbt.stringOf(nbt.get("item_display"), null);
-        if (raw == null) return plugin.settings().itemTransform;
+    /**
+     * How an item display should be posed: from its NBT, else from its own name, else the config.
+     *
+     * <p>The name is not a fallback anybody would guess at - it is where BDEngine actually writes
+     * it. A head on a sign comes through as {@code player_head[display=none]} and carries no
+     * {@code item_display} in its NBT at all, so reading only the NBT left the whole decision to
+     * {@code display.item-display-transform} in the config. Two servers with different values
+     * there then drew the same model differently, which is not something a model author can do
+     * anything about - the file said what it wanted and nobody read it.</p>
+     *
+     * <p>Order of preference: explicit NBT, then the name, then the config. Most specific
+     * wins.</p>
+     */
+    private ItemDisplay.ItemDisplayTransform itemTransformOf(BdPart part) {
+        ItemDisplay.ItemDisplayTransform fromNbt =
+                transformNamed(Snbt.stringOf(part.options().get("item_display"), null));
+        if (fromNbt != null) return fromNbt;
+
+        ItemDisplay.ItemDisplayTransform fromName = transformNamed(displaySuffix(part.name()));
+        if (fromName != null) return fromName;
+
+        return plugin.settings().itemTransform;
+    }
+
+    /** Reads {@code display=<mode>} out of a name like {@code player_head[display=head]}. */
+    private static String displaySuffix(String name) {
+        int bracket = name.indexOf('[');
+        if (bracket < 0 || !name.endsWith("]")) return null;
+
+        for (String option : name.substring(bracket + 1, name.length() - 1).split(",")) {
+            int equals = option.indexOf('=');
+            if (equals > 0 && option.substring(0, equals).trim().equals("display")) {
+                return option.substring(equals + 1).trim();
+            }
+        }
+        return null;
+    }
+
+    /** The mode by name, or null when it is missing or not one Minecraft knows. */
+    private ItemDisplay.ItemDisplayTransform transformNamed(String raw) {
+        if (raw == null || raw.isBlank()) return null;
         try {
-            return ItemDisplay.ItemDisplayTransform.valueOf(raw.toUpperCase(Locale.ROOT));
+            return ItemDisplay.ItemDisplayTransform.valueOf(raw.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ignored) {
-            return plugin.settings().itemTransform;
+            return null;
         }
     }
 

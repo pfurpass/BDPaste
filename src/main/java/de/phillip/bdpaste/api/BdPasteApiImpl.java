@@ -145,6 +145,20 @@ public final class BdPasteApiImpl implements BdPasteApi {
     }
 
     @Override
+    public String clickCommand(Placement model) {
+        // From the registry, not from the handed-in snapshot, which may be old.
+        return plugin.placed().get(model.id()).map(Placement::clickCommand).orElse("");
+    }
+
+    @Override
+    public boolean setClickCommand(Placement model, String command) {
+        String text = command == null ? "" : command.trim();
+        if (text.length() > 256) return false;
+        plugin.placed().setClickCommand(model.id(), text);
+        return true;
+    }
+
+    @Override
     public boolean hasHitbox(Placement model) {
         // From the registry, not from the handed-in snapshot, which may be old.
         return plugin.placed().get(model.id()).map(Placement::clickable).orElse(false);

@@ -1,7 +1,6 @@
 package de.phillip.bdpaste.parse;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.phillip.bdpaste.BDPastePlugin;
 import de.phillip.bdpaste.model.BdModel;
 
@@ -34,6 +33,9 @@ public final class ModelLibrary {
     private final BDPastePlugin plugin;
     private final Path folder;
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
+
+    /** Built on first use by {@link #http()}; null until something is downloaded. */
+    private volatile HttpClient http;
 
     public ModelLibrary(BDPastePlugin plugin) {
         this.plugin = plugin;
@@ -201,7 +203,8 @@ public final class ModelLibrary {
                 .GET()
                 .build();
 
-        try (HttpClient client = http()) {
+        try {
+            HttpClient client = http();
             HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
             if (response.statusCode() / 100 != 2) {
                 fail(onError, "The server answered with HTTP " + response.statusCode() + ".");
@@ -220,7 +223,8 @@ public final class ModelLibrary {
      * command endpoint first, then fall back to the project one.
      */
     private void fetchFromBlockDisplay(String id, String name, Consumer<String> onSuccess, Consumer<String> onError) {
-        try (HttpClient client = http()) {
+        try {
+            HttpClient client = http();
             byte[] commands = post(client, BlockDisplayApi.COMMANDS, BlockDisplayApi.modelIdBody(id));
             JsonObject payload = successPayload(commands);
 
@@ -282,7 +286,7 @@ public final class ModelLibrary {
     /** The {@code data} object of a successful API answer, or {@code null}. */
     private static JsonObject successPayload(byte[] json) {
         try {
-            JsonObject root = JsonParser.parseString(new String(json, StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject root = Json.parse(new String(json, StandardCharsets.UTF_8)).getAsJsonObject();
             if (!root.has("success") || !root.get("success").getAsBoolean()) return null;
             return root.has("data") && root.get("data").isJsonObject() ? root.getAsJsonObject("data") : null;
         } catch (RuntimeException ex) {
@@ -322,12 +326,31 @@ public final class ModelLibrary {
                 () -> onSuccess.accept(fileName + " (" + parts + " parts)"));
     }
 
+    /**
+     * One client for the whole plugin, built the first time anything is actually downloaded.
+     *
+     * <p>Shared rather than one per request, which is how {@link HttpClient} is meant to be used
+     * - it pools connections and carries its own threads. It is also what lets this compile for
+     * Java 17: {@code HttpClient} only became {@code AutoCloseable} in Java 21, so a
+     * try-with-resources around a per-request client will not build for anything older.</p>
+     *
+     * <p>Built lazily because most servers never run {@code /bdpaste import} at all, and one
+     * that never downloads should not carry the threads for it.</p>
+     */
     private HttpClient http() {
-        // NORMAL follows 301/302/303/307/308 but never downgrades https to http.
-        return HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(Duration.ofSeconds(15))
-                .build();
+        HttpClient existing = http;
+        if (existing != null) return existing;
+        // Downloads run off the main thread, so two of them can arrive here at once.
+        synchronized (this) {
+            if (http == null) {
+                // NORMAL follows 301/302/303/307/308 but never downgrades https to http.
+                http = HttpClient.newBuilder()
+                        .followRedirects(HttpClient.Redirect.NORMAL)
+                        .connectTimeout(Duration.ofSeconds(15))
+                        .build();
+            }
+            return http;
+        }
     }
 
     private String userAgent() {

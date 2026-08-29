@@ -6,6 +6,7 @@ import de.phillip.bdpaste.registry.Placement;
 import de.phillip.bdpaste.util.Msg;
 import de.phillip.bdpaste.util.Settings;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
@@ -20,6 +21,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.RayTraceResult;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,6 +39,9 @@ public final class ClickListener implements Listener {
 
     /** Clicks arriving faster than this on the same model are the same click, near enough. */
     private static final long COOLDOWN_MS = 250;
+
+    /** What marks a click command as one to run from the console rather than as the player. */
+    public static final String CONSOLE_PREFIX = "console:";
 
     private final BDPastePlugin plugin;
     private final Map<UUID, Long> lastClick = new HashMap<>();
@@ -112,9 +117,69 @@ public final class ClickListener implements Listener {
         plugin.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled()) return;
 
+        // A model carrying a command runs that instead of the built-in action, rather than
+        // as well as it: a sofa you can sit on should not also start cycling its animations.
+        // Clear it with /bdpaste command off to get the built-in behaviour back.
+        if (action == BdModelClickEvent.Action.RIGHT && !model.clickCommand().isBlank()) {
+            runCommand(player, model);
+            return;
+        }
+
         run(player, model, action == BdModelClickEvent.Action.RIGHT
                 ? plugin.settings().interactionRightClick
                 : plugin.settings().interactionLeftClick);
+    }
+
+    /**
+     * Runs the command a model carries.
+     *
+     * <p>As the player by default, so it can do no more than they could type themselves. A
+     * {@code console:} prefix runs it from the console instead, which is how you hand out
+     * something the player has no permission for - and why setting one of those is gated behind
+     * {@code bdpaste.admin}.</p>
+     */
+    private void runCommand(Player player, Placement model) {
+        String raw = model.clickCommand();
+        boolean console = raw.regionMatches(true, 0, CONSOLE_PREFIX, 0, CONSOLE_PREFIX.length());
+        String command = fill(console ? raw.substring(CONSOLE_PREFIX.length()) : raw, player, model);
+        if (command.isBlank()) return;
+
+        try {
+            if (console) {
+                plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), command);
+            } else {
+                player.performCommand(command);
+            }
+        } catch (RuntimeException ex) {
+            plugin.getSLF4JLogger().warn("The click command of model {} failed: /{}",
+                    model.shortId(), command, ex);
+            Msg.error(player, "That did not work - the server console says why.");
+        }
+    }
+
+    /**
+     * Puts the placeholders in.
+     *
+     * <p>The coordinates are formatted with {@link Locale#ROOT} on purpose: on a server running
+     * under a German locale the default formatting writes {@code 1,5}, and a command reading
+     * that gets two arguments where it wanted one.</p>
+     */
+    private String fill(String command, Player player, Placement model) {
+        World world = model.bukkitWorld();
+        return command.trim()
+                .replace("%player%", player.getName())
+                .replace("%uuid%", player.getUniqueId().toString())
+                .replace("%model%", model.model())
+                .replace("%source%", model.source())
+                .replace("%id%", model.id().toString())
+                .replace("%world%", world == null ? "" : world.getName())
+                .replace("%x%", coordinate(model.x()))
+                .replace("%y%", coordinate(model.y()))
+                .replace("%z%", coordinate(model.z()));
+    }
+
+    private static String coordinate(double value) {
+        return String.format(Locale.ROOT, "%.3f", value);
     }
 
     /** One entry per player and button, so left and right do not shadow each other. */
@@ -150,7 +215,7 @@ public final class ClickListener implements Listener {
             return;
         }
         plugin.api().play(model, model.animationName(), model.animationSpeed(),
-                plugin.settings().interactionLoop, started -> failNote(player, started));
+                plugin.settings().interactionLoop, started -> failNote(player, model, started));
     }
 
     /**
@@ -161,10 +226,10 @@ public final class ClickListener implements Listener {
      */
     private void cycle(Player player, Placement model) {
         plugin.api().animations(model, names -> {
-            if (names.isEmpty()) {
-                Msg.error(player, "That model has no animations.");
-                return;
-            }
+            // Nothing to cycle through. Not an error and not worth saying: a decoration with a
+            // hitbox is a perfectly ordinary thing, and clicking it repeatedly used to fill the
+            // chat with a line nobody can act on.
+            if (names.isEmpty()) return;
 
             boolean running = plugin.animations().isPlaying(model.id());
             int current = running ? names.indexOf(model.animationName()) : -1;
@@ -177,14 +242,23 @@ public final class ClickListener implements Listener {
                 return;
             }
             plugin.api().play(model, names.get(next), model.animationSpeed(),
-                    plugin.settings().interactionLoop, started -> failNote(player, started));
+                    plugin.settings().interactionLoop, started -> failNote(player, model, started));
         }, error -> Msg.error(player, Msg.escape(error)));
     }
 
-    private void failNote(Player player, boolean started) {
-        if (!started && player.isOnline()) {
-            Msg.error(player, "That animation could not be started.");
-        }
+    /**
+     * Says so when an animation was asked for and did not run.
+     *
+     * <p>Only for a model that has animations - one that has none is a decoration, and telling
+     * somebody off for clicking a decoration is noise they cannot act on.</p>
+     */
+    private void failNote(Player player, Placement model, boolean started) {
+        if (started || !player.isOnline()) return;
+        plugin.api().animations(model, names -> {
+            if (!names.isEmpty()) Msg.error(player, "That animation could not be started.");
+        }, error -> {
+            // Could not even read the file; that is already in the console.
+        });
     }
 
     private Optional<Placement> modelOf(Entity entity) {

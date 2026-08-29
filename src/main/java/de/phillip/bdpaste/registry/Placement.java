@@ -45,6 +45,14 @@ public record Placement(
          * it.</p>
          */
         boolean clickable,
+        /**
+         * A command this model runs when somebody right clicks it; empty for none.
+         *
+         * <p>Stored without its leading slash. A {@code console:} prefix runs it from the
+         * console instead of as the player - which is why setting one of those needs
+         * {@code bdpaste.admin} while an ordinary one only needs {@code bdpaste.place}.</p>
+         */
+        String clickCommand,
         UUID owner,
         String ownerName,
         long placedAt,
@@ -55,6 +63,7 @@ public record Placement(
     public Placement {
         // Optional throughout, and read from a yml that may predate the field.
         if (label == null) label = "";
+        if (clickCommand == null) clickCommand = "";
     }
 
     public World bukkitWorld() {

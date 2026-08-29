@@ -254,7 +254,7 @@ public final class Labels {
         display.setViewRange((float) plugin.settings().labelViewRange);
 
         float scale = (float) plugin.settings().labelScale;
-        display.setTransformationMatrix(new Matrix4f().scale(scale));
+        de.phillip.bdpaste.spawn.ModelSpawner.pose(display, new Matrix4f().scale(scale));
 
         // Moved by the animation player while the model is running, so it needs to glide.
         display.setTeleportDuration(Math.max(1, plugin.settings().animationInterval));

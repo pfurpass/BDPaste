@@ -9,6 +9,7 @@ import de.phillip.bdpaste.model.BdPart;
 import de.phillip.bdpaste.model.BdSound;
 import de.phillip.bdpaste.model.NoteBlocks;
 import de.phillip.bdpaste.place.Placements;
+import de.phillip.bdpaste.spawn.ModelSpawner;
 import de.phillip.bdpaste.registry.Placement;
 import org.bukkit.Location;
 import org.bukkit.SoundCategory;
@@ -387,7 +388,7 @@ public final class AnimationPlayer {
         display.setInterpolationDelay(1);
         display.setInterpolationDelay(0);
         display.setInterpolationDuration(easeTicks(interval));
-        display.setTransformationMatrix(matrix);
+        ModelSpawner.pose(display, matrix);
     }
 
     /** Nobody around means nobody to see it, so do not burn packets on it. */
@@ -564,7 +565,7 @@ public final class AnimationPlayer {
 
                 display.setInterpolationDelay(0);
                 display.setInterpolationDuration(plugin.settings().animationInterval);
-                display.setTransformationMatrix(
+                ModelSpawner.pose(display,
                         new Matrix4f(user).mul(model.parts().get(index).restPose()));
             }
         }, error -> {
@@ -582,7 +583,7 @@ public final class AnimationPlayer {
             if (!display.isValid()) continue;
             display.setInterpolationDelay(0);
             display.setInterpolationDuration(plugin.settings().animationInterval);
-            display.setTransformationMatrix(new Matrix4f(entry.user).mul(entry.parts.get(i).restPose()));
+            ModelSpawner.pose(display, new Matrix4f(entry.user).mul(entry.parts.get(i).restPose()));
         }
         entry.appliedTick = -1;
         entry.lastSoundStep = -1;

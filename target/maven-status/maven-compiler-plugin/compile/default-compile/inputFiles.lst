@@ -19,12 +19,15 @@ C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\model\BdMo
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\model\BdPart.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\model\BdSound.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\model\Bounds.java
+C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\model\Decompose.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\model\DisplayKind.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\model\NoteBlocks.java
+C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\model\Renames.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\model\TransformStep.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\parse\AnimationDatapack.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\parse\BdEngineParser.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\parse\BlockDisplayApi.java
+C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\parse\Json.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\parse\Matrices.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\parse\ModelLibrary.java
 C:\Users\Phillip PC\Desktop\DBEngine\src\main\java\de\phillip\bdpaste\parse\ModelLoader.java
