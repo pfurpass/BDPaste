@@ -37,11 +37,14 @@ de\phillip\bdpaste\model\TransformStep.class
 de\phillip\bdpaste\parse\ModelLibrary.class
 de\phillip\bdpaste\place\PlacementSession$Restore.class
 de\phillip\bdpaste\spawn\ModelSpawner.class
+de\phillip\bdpaste\parse\Json.class
 de\phillip\bdpaste\api\BdModelClickEvent.class
+de\phillip\bdpaste\model\Decompose.class
 de\phillip\bdpaste\api\BdModelClickEvent$Action.class
 de\phillip\bdpaste\cmd\BdCommand$1.class
 de\phillip\bdpaste\interact\HitboxLayout$Shell.class
 de\phillip\bdpaste\label\Labels.class
+de\phillip\bdpaste\model\Renames.class
 de\phillip\bdpaste\model\BdModel.class
 de\phillip\bdpaste\util\Settings$ClickAction.class
 de\phillip\bdpaste\place\UserTransform.class
@@ -69,4 +72,5 @@ de\phillip\bdpaste\model\NoteBlocks$Playable.class
 de\phillip\bdpaste\place\PlacementSession$1.class
 de\phillip\bdpaste\parse\SummonParser.class
 de\phillip\bdpaste\api\BdAnimationEndEvent.class
+de\phillip\bdpaste\model\Decompose$Parts.class
 de\phillip\bdpaste\place\PlacementSession$Pose.class

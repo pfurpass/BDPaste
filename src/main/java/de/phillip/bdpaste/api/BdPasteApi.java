@@ -27,6 +27,10 @@ import java.util.function.Consumer;
  * disk take callbacks instead of blocking, and those callbacks come back on the main thread, so
  * they are safe to touch entities from.</p>
  *
+ * <p>Version 8 added {@link #clickCommand} and {@link #setClickCommand}: a model can carry a
+ * command it runs when somebody right clicks it, which covers the common case - a sofa you
+ * can sit on - without anybody having to write a listener for it.</p>
+ *
  * <p>Version 7 added {@link #place}, so a plugin can put a model into the world by itself.
  * Before that the only way in was a player standing there with a crosshair, which made anything
  * built out of models - a shop front, a quest marker, a decorated arena - something that had to
@@ -38,7 +42,7 @@ public interface BdPasteApi {
      * Bumped whenever something here changes in a way that could break a caller. Check it if
      * you want to be strict about which BDPaste you are talking to.
      */
-    int VERSION = 7;
+    int VERSION = 8;
 
     // ------------------------------------------------------------------ models in the world
 
@@ -213,6 +217,30 @@ public interface BdPasteApi {
      * @return false when the text is longer than 256 characters, in which case nothing changed
      */
     boolean setLabel(Placement model, String miniMessage);
+
+    /**
+     * The command this model runs when it is right clicked, without its leading slash, or an
+     * empty string when it has none.
+     *
+     * <p>A {@code console:} prefix means it runs from the console rather than as the player.</p>
+     */
+    String clickCommand(Placement model);
+
+    /**
+     * Sets that command, or clears it with an empty string.
+     *
+     * <p>It runs <em>instead of</em> whatever {@code interaction.right-click} says in the
+     * config, not as well as it - a sofa somebody can sit on should not also cycle through its
+     * animations. The placeholders {@code %player%}, {@code %uuid%}, {@code %model%},
+     * {@code %source%}, {@code %id%}, {@code %world%}, {@code %x%}, {@code %y%} and {@code %z%}
+     * are filled in when it runs.</p>
+     *
+     * <p>Nothing happens on a model with no hitbox, since nobody can click one.
+     * {@link #setHitbox} sorts that out.</p>
+     *
+     * @return false when the command is longer than 256 characters, in which case nothing changed
+     */
+    boolean setClickCommand(Placement model, String command);
 
     /**
      * Whether this model is set to be clickable.

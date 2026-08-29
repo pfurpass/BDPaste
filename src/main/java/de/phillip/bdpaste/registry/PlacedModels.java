@@ -98,6 +98,7 @@ public final class PlacedModels {
                         s.getString("label", ""),
                         s.getDouble("labelOffset", 0.0),
                         s.getBoolean("clickable", true),
+                        s.getString("clickCommand", ""),
                         s.getString("owner") == null ? null : UUID.fromString(s.getString("owner")),
                         s.getString("ownerName", "?"),
                         s.getLong("placedAt"),
@@ -199,6 +200,7 @@ public final class PlacedModels {
             yaml.set(base + ".label", p.label());
             yaml.set(base + ".labelOffset", p.labelOffset());
             yaml.set(base + ".clickable", p.clickable());
+            yaml.set(base + ".clickCommand", p.clickCommand());
             yaml.set(base + ".owner", p.owner() == null ? null : p.owner().toString());
             yaml.set(base + ".ownerName", p.ownerName());
             yaml.set(base + ".placedAt", p.placedAt());
@@ -256,7 +258,7 @@ public final class PlacedModels {
                 old.yaw(), old.pitch(), old.roll(), old.scale(),
                 old.offsetX(), old.offsetY(), old.offsetZ(),
                 old.parts(), animating, speed, animationName == null ? "" : animationName,
-                old.label(), old.labelOffset(), old.clickable(),
+                old.label(), old.labelOffset(), old.clickable(), old.clickCommand(),
                 old.owner(), old.ownerName(), old.placedAt(),
                 old.minX(), old.minY(), old.minZ(),
                 old.maxX(), old.maxY(), old.maxZ()));
@@ -282,7 +284,7 @@ public final class PlacedModels {
                 old.yaw(), old.pitch(), old.roll(), old.scale(),
                 old.offsetX(), old.offsetY(), old.offsetZ(),
                 old.parts(), old.animating(), old.animationSpeed(), old.animationName(),
-                text, offset, old.clickable(),
+                text, offset, old.clickable(), old.clickCommand(),
                 old.owner(), old.ownerName(), old.placedAt(),
                 old.minX(), old.minY(), old.minZ(), old.maxX(), old.maxY(), old.maxZ());
 
@@ -315,7 +317,7 @@ public final class PlacedModels {
                 old.yaw(), old.pitch(), old.roll(), old.scale(),
                 old.offsetX(), old.offsetY(), old.offsetZ(),
                 old.parts(), old.animating(), old.animationSpeed(), old.animationName(),
-                old.label(), old.labelOffset(), old.clickable(),
+                old.label(), old.labelOffset(), old.clickable(), old.clickCommand(),
                 old.owner(), old.ownerName(), old.placedAt(),
                 box.getMinX(), box.getMinY(), box.getMinZ(),
                 box.getMaxX(), box.getMaxY(), box.getMaxZ()));
@@ -338,7 +340,7 @@ public final class PlacedModels {
                 old.yaw(), old.pitch(), old.roll(), old.scale(),
                 old.offsetX(), old.offsetY(), old.offsetZ(),
                 old.parts(), old.animating(), old.animationSpeed(), old.animationName(),
-                old.label(), old.labelOffset(), clickable,
+                old.label(), old.labelOffset(), clickable, old.clickCommand(),
                 old.owner(), old.ownerName(), old.placedAt(),
                 old.minX(), old.minY(), old.minZ(), old.maxX(), old.maxY(), old.maxZ());
 
@@ -346,6 +348,24 @@ public final class PlacedModels {
         save();
         if (plugin.hitboxes() != null) plugin.hitboxes().setEnabled(updated, clickable);
         return true;
+    }
+
+    /** Sets the command a model runs when clicked, or clears it when the text is empty. */
+    public void setClickCommand(UUID id, String command) {
+        Placement old = placements.get(id);
+        if (old == null) return;
+
+        String text = command == null ? "" : command.trim();
+        placements.put(id, new Placement(
+                old.id(), old.model(), old.source(), old.world(),
+                old.x(), old.y(), old.z(),
+                old.yaw(), old.pitch(), old.roll(), old.scale(),
+                old.offsetX(), old.offsetY(), old.offsetZ(),
+                old.parts(), old.animating(), old.animationSpeed(), old.animationName(),
+                old.label(), old.labelOffset(), old.clickable(), text,
+                old.owner(), old.ownerName(), old.placedAt(),
+                old.minX(), old.minY(), old.minZ(), old.maxX(), old.maxY(), old.maxZ()));
+        save();
     }
 
     public Optional<Placement> get(UUID id) {

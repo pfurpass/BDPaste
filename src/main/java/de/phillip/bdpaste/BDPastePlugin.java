@@ -155,6 +155,26 @@ public final class BDPastePlugin extends JavaPlugin {
         }
     }
 
+    /**
+     * Logs a block whose state Minecraft would not take, so the plain block was used instead.
+     *
+     * <p>Worth saying out loud rather than quietly doing: a bell with its default state stands
+     * on the floor and shows its gold body, while the same bell hung between two walls shows a
+     * wooden bar. Same block, completely different shape, and until now nothing in the log said
+     * the model had not got what it asked for.</p>
+     */
+    public void warnBlockState(String name, String bare) {
+        if (warnedUnknown.add("state:" + name)) {
+            getSLF4JLogger().warn("Block state of '{}' was not accepted - falling back to plain "
+                    + "'{}' with its default state, which may look quite different", name, bare);
+        }
+    }
+
+    /** Says something to the console once per server run, however often it comes up. */
+    public void warnOnce(String key, String message) {
+        if (warnedUnknown.add("once:" + key)) getSLF4JLogger().info(message);
+    }
+
     /** Logs a part that could not be spawned at all. Skipped, not substituted. */
     public void warnPartFailed(String name, Throwable cause) {
         if (warnedUnknown.add("failed:" + name)) {

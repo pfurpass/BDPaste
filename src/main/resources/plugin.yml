@@ -1,7 +1,7 @@
 name: BDPaste
 version: '${project.version}'
 main: de.phillip.bdpaste.BDPastePlugin
-api-version: '26.2'
+api-version: '1.20'
 description: Import BDEngine models and place them in-world with your crosshair.
 website: https://bdengine.app/
 authors:

@@ -10,15 +10,33 @@ public final class Matrices {
     private Matrices() {
     }
 
+    /**
+     * Builds the matrix in one go, through the constructor, and then says so out loud.
+     *
+     * <p>This used to fill the matrix cell by cell with {@code set(col, row, value)}, and that
+     * is a trap. A JOML matrix carries a bitmask of things it believes about itself - "I am the
+     * identity", "I am only a translation" - and {@code mul} reads it to take shortcuts. In
+     * JOML 1.10.5 that setter does not clear the bitmask, so a matrix built this way out of a
+     * fresh identity still claimed to <em>be</em> the identity, and every multiplication after
+     * it quietly threw it away. Whole models came out as a single cube, with every part holding
+     * its position and having lost its rotation and its size.</p>
+     *
+     * <p>JOML 1.10.8 clears the flags and the same code was fine - which is exactly why this
+     * only showed up on some servers. Paper bundles JOML, and 1.20.4 and 1.21.1 ship 1.10.5
+     * while 26.2 ships 1.10.8. The version under the plugin is not the plugin's to choose.</p>
+     *
+     * <p>The constructor works out the flags itself on every version, and
+     * {@link Matrix4f#determineProperties()} afterwards makes it true rather than merely
+     * likely. JOML's own order is column-major, so it is fed column by column.</p>
+     */
     public static Matrix4f fromRowMajor(float[] v) {
-        Matrix4f m = new Matrix4f();
-        if (v == null || v.length != 16) return m;
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 4; col++) {
-                m.set(col, row, v[row * 4 + col]);
-            }
-        }
-        return m;
+        if (v == null || v.length != 16) return new Matrix4f();
+        return new Matrix4f(
+                v[0], v[4], v[8], v[12],
+                v[1], v[5], v[9], v[13],
+                v[2], v[6], v[10], v[14],
+                v[3], v[7], v[11], v[15])
+                .determineProperties();
     }
 
     /** Reads a transformation from either a 16-float list or a decomposed compound. */

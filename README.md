@@ -3,7 +3,9 @@
 A Paper plugin that imports models from [bdengine.app](https://bdengine.app/) and places them
 **with your crosshair** — instead of pasting enormous `/summon` commands into command blocks.
 
-Built against **Paper 26.2** (`paper-api 26.2.build.116-stable`, Java 25).
+Runs on **Paper 1.20.4 and newer**, including forks like Purpur — built against
+`paper-api 1.20.4` on **Java 17**, and compile-checked against every version from there up to
+26.2. Plain Spigot/CraftBukkit will not work; see [Versions](#versions).
 
 [spigotmc](https://www.spigotmc.org/resources/bdpaste.138329/)
 
@@ -459,6 +461,7 @@ Base: `/bdpaste` (aliases `/bde`, `/bdp`)
 | `delete <id>` | remove a model by id | `bdpaste.remove` |
 | `animate [name] [speed] [once\|loop\|off]` | play the model's animation | `bdpaste.place` |
 | `label <text\|raise <n>\|off>` | floating name over the model, MiniMessage | `bdpaste.place` |
+| `command <cmd\|off>` | run a command when the model is right clicked | `bdpaste.place` |
 | `info` | details about the model you are aiming at | `bdpaste.use` |
 | `near [radius]` | list placed models nearby | `bdpaste.use` |
 | `tp <id>` | teleport to a model | `bdpaste.admin` |
@@ -535,7 +538,7 @@ Some models stay big because they are big: RUSH E is a note roll spanning 18.7 b
 
 ## Building it yourself
 
-Needs **JDK 25** (Paper 26.2 is compiled against Java 25; JDK 21 will not do):
+Needs **JDK 17 or newer**:
 
 ```bash
 mvn clean package
@@ -598,6 +601,45 @@ Without `setCancelled(true)`, BDPaste goes on to do whatever `interaction.right-
 
 `CYCLE` is the default for right click. A model with two animations then goes
 `labourer` → `talking` → off → `labourer`, without a line of your own code.
+
+### Click commands
+
+A model can carry a command it runs when somebody right clicks it — the sofa you can sit on,
+without a line of code:
+
+```bash
+/bdpaste command sit
+/bdpaste command warp lobby
+/bdpaste command off
+```
+
+Everything after `command` is taken as typed, so a command with spaces needs no quoting. A
+leading slash is dropped if you type one out of habit.
+
+It runs **instead of** whatever `interaction.right-click` says in the config, not as well as it —
+a sofa should not also start cycling through its animations. Clearing it with
+`/bdpaste command off` brings the configured behaviour back.
+
+It runs **as the player**, so it can do no more than they could type themselves. To hand out
+something they have no permission for, prefix it:
+
+```bash
+/bdpaste command console: give %player% bread 1
+```
+
+That form needs `bdpaste.admin` — the plain form only needs `bdpaste.place`.
+
+| Placeholder | |
+|---|---|
+| `%player%` `%uuid%` | who clicked |
+| `%model%` `%source%` `%id%` | which model, and which placed copy |
+| `%world%` `%x%` `%y%` `%z%` | where it stands |
+
+Coordinates are always written with a dot, whatever locale the server runs under — a `1,5` would
+otherwise arrive at the command as two arguments.
+
+A model with no hitbox cannot be clicked, so the command never fires. `/bdpaste command` warns
+you if that is the case; `/bdpaste hitbox on` fixes it.
 
 ### Which animation is running
 
@@ -706,6 +748,9 @@ boolean  stop(UUID id);
 String   label(Placement model);
 boolean  setLabel(Placement model, String miniMessage);
 
+String   clickCommand(Placement model);
+boolean  setClickCommand(Placement model, String command);
+
 void     place(String source, Location at,
                Consumer<Placement> placed, Consumer<String> failed);
 void     place(String source, Location at, float yaw, float scale,
@@ -759,14 +804,44 @@ single part could be spawned.
 
 `BdPasteApi.VERSION` goes up whenever something here changes in a way that could break a caller.
 
+## Versions
+
+| | |
+|---|---|
+| **Paper 1.20.4 and newer** | supported, and what the jar is built against |
+| **Purpur, Pufferfish** and other Paper forks | supported — they carry the whole Paper API |
+| **Spigot, CraftBukkit** | no |
+| **Folia** | no |
+
+The jar is compiled against the *oldest* supported API and on Java 17, so its bytecode
+references nothing a 1.20.4 server lacks. The same source is compile-checked against 1.20.4,
+1.21.1, 1.21.4, 1.21.8, 1.21.11 and 26.2, which is what says the API surface it uses exists at
+both ends of that range.
+
+Spigot is out because BDPaste leans on Paper API throughout — Adventure and MiniMessage for the
+labels, `getSLF4JLogger()`, and `Bukkit.createProfile` for head textures. That is not a switch to
+flip; it would mean shading Adventure and rewriting the head handling.
+
+Anything below 1.20.4 is a harder no: display entities only arrived in 1.19.4, and below that
+there is nothing to place at all.
+
 ## Known limits
 
 - **Easing curves** on individual keyframes (`curveFunc` in the editor) are ignored — the
   interpolation between two keyframes is linear.
 - The preview while placing shows the **resting pose**; animation starts once it is set down.
-- **Item displays without an explicit `item_display` in the model** get the mode from
-  `display.item-display-transform` (default `NONE`). If a head model looks wrongly scaled, `HEAD`
-  is usually the right value.
+- **Item displays** are posed from their `item_display` NBT if they have one, otherwise from
+  their own name — BDEngine writes it there, as in `player_head[display=none]`. Only a part that
+  says nothing either way falls back to `display.item-display-transform` (default `NONE`).
+- **Block entities look different depending on the server version.** A bell, a chest, a sign, a
+  bed, a banner, a skull, a conduit, a shulker box, a decorated pot and an enchanting table are
+  all drawn in two pieces: a plain block model, plus a second piece drawn by code so it can move
+  — a bell that swings, a chest lid that opens. A block display only draws the plain model, so up
+  to 1.21.x a bell in a model shows just its wooden bar and no gold bell. From 26.x on Mojang
+  draws those pieces as ordinary models, so the gold bell appears and a model built around the
+  bar alone no longer looks the way it did. Nothing a plugin can influence: the server sends the
+  same block either way, and BDEngine's own preview follows the older behaviour. If a model has
+  to look identical everywhere, build it out of blocks that are not block entities.
 - **`paintTexture`** (painted textures from BDEngine) is ignored.
 - Unknown blocks/items from newer or older MC versions are replaced with stone; that is noted in
   the server console once.

@@ -2,7 +2,6 @@ package de.phillip.bdpaste.parse;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.phillip.bdpaste.model.BdModel;
 import de.phillip.bdpaste.model.BdPart;
 
@@ -95,7 +94,7 @@ public final class ModelLoader {
     private static BdModel tryBlockDisplayJson(String modelName, String text) {
         JsonElement root;
         try {
-            root = JsonParser.parseString(text);
+            root = Json.parse(text);
         } catch (RuntimeException ex) {
             return null;
         }

@@ -3,7 +3,6 @@ package de.phillip.bdpaste.parse;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.phillip.bdpaste.model.BdAnimation;
 import de.phillip.bdpaste.model.BdKeyframe;
 import de.phillip.bdpaste.model.BdModel;
@@ -44,7 +43,7 @@ public final class BdEngineParser {
     }
 
     public static BdModel parse(String modelName, String json) {
-        JsonElement root = JsonParser.parseString(json);
+        JsonElement root = Json.parse(json);
         List<BdPart> parts = new ArrayList<>();
 
         List<JsonElement> roots = new ArrayList<>();

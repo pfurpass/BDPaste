@@ -1,6 +1,7 @@
 package de.phillip.bdpaste.cmd;
 
 import de.phillip.bdpaste.BDPastePlugin;
+import de.phillip.bdpaste.interact.ClickListener;
 import de.phillip.bdpaste.model.BdPart;
 import de.phillip.bdpaste.model.DisplayKind;
 import de.phillip.bdpaste.place.PlacementSession;
@@ -11,6 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -29,7 +31,10 @@ public final class BdCommand implements TabExecutor {
 
     private static final List<String> SUBCOMMANDS = List.of(
             "list", "inspect", "place", "duplicate", "move", "replace", "repeat", "freeze", "pause", "resume", "step", "snap", "confirm", "cancel", "set", "undo", "remove", "delete",
-            "animate", "label", "info", "near", "tp", "import", "hitbox", "cleanup", "reload", "help");
+            "animate", "label", "command", "info", "near", "tp", "import", "hitbox", "cleanup", "reload", "help");
+
+    /** A command line the server would refuse anyway is not worth storing. */
+    private static final int MAX_COMMAND = 256;
 
     private final BDPastePlugin plugin;
 
@@ -77,6 +82,7 @@ public final class BdCommand implements TabExecutor {
             case "tp" -> teleport(sender, rest);
             case "import" -> importUrl(sender, rest);
             case "label" -> label(sender, rest);
+            case "command" -> clickCommand(sender, rest);
             case "hitbox" -> hitbox(sender, rest);
             case "cleanup" -> cleanup(sender, rest);
             case "reload" -> reload(sender);
@@ -112,6 +118,7 @@ public final class BdCommand implements TabExecutor {
         Msg.plain(sender, "<yellow>/<l> tp <id></yellow> <dark_gray>-</dark_gray> <gray>teleport to a model", Msg.arg("l", label));
         Msg.plain(sender, "<yellow>/<l> import <url-or-id> [name]</yellow> <dark_gray>-</dark_gray> <gray>fetch from a link or model id", Msg.arg("l", label));
         Msg.plain(sender, "<yellow>/<l> label <text|raise <n>|off></yellow> <dark_gray>-</dark_gray> <gray>floating name over a model, MiniMessage", Msg.arg("l", label));
+        Msg.plain(sender, "<yellow>/<l> command <cmd></yellow> <dark_gray>-</dark_gray> <gray>run a command when the model is clicked", Msg.arg("l", label));
         Msg.plain(sender, "<yellow>/<l> hitbox [on|off|sync]</yellow> <dark_gray>-</dark_gray> <gray>make a model clickable", Msg.arg("l", label));
         Msg.plain(sender, "<yellow>/<l> cleanup <radius></yellow> <dark_gray>-</dark_gray> <gray>delete every BDPaste display nearby", Msg.arg("l", label));
         Msg.plain(sender, "<yellow>/<l> reload</yellow> <dark_gray>-</dark_gray> <gray>reload config and rescan models", Msg.arg("l", label));
@@ -927,6 +934,85 @@ public final class BdCommand implements TabExecutor {
      * model on record in line with the config, which is what you want after switching
      * {@code interaction.enabled} or loading chunks that were away at startup.</p>
      */
+    /**
+     * The command a model runs when somebody right clicks it.
+     *
+     * <p>The arguments are taken as typed, so quoting is not needed and a command can hold
+     * spaces - {@code /bdpaste command warp lobby} is one command, not two arguments.</p>
+     */
+    private void clickCommand(CommandSender sender, String[] args) {
+        Player player = requirePlayer(sender);
+        if (player == null || !require(player, "bdpaste.place")) return;
+
+        Placement target = targeted(player);
+        if (target == null) return;
+        if (!canEdit(player, target)) {
+            Msg.error(player, "That one belongs to " + Msg.escape(target.ownerName()) + ".");
+            return;
+        }
+
+        if (args.length == 0) {
+            if (target.clickCommand().isBlank()) {
+                Msg.send(player, "<gray><white><model></white> runs no command when clicked.</gray>",
+                        Msg.arg("model", target.model()));
+            } else {
+                Msg.send(player, "<gray>On click:</gray> <white>/<cmd></white>",
+                        Msg.arg("cmd", target.clickCommand()));
+            }
+            Msg.plain(player, "<gray>Set one with <white>/bdpaste command sit</white>, "
+                    + "clear it with <white>/bdpaste command off</white>.</gray>");
+            Msg.plain(player, "<gray>Placeholders: <white>%player% %uuid% %model% %source% "
+                    + "%id% %world% %x% %y% %z%</white></gray>");
+            Msg.plain(player, "<gray>Prefix with <white>console:</white> to run it from the "
+                    + "console instead of as the player.</gray>");
+            return;
+        }
+
+        if (args.length == 1 && (args[0].equalsIgnoreCase("off") || args[0].equalsIgnoreCase("clear"))) {
+            if (target.clickCommand().isBlank()) {
+                Msg.send(player, "<gray>There was none.</gray>");
+                return;
+            }
+            plugin.placed().setClickCommand(target.id(), "");
+            Msg.send(player, "<green>Click command removed.</green> "
+                    + "<gray>Clicking does whatever the config says again.</gray>");
+            return;
+        }
+
+        // Typed with a slash out of habit - drop it, since that is how it is stored.
+        String command = String.join(" ", args).trim();
+        if (command.startsWith("/")) command = command.substring(1).trim();
+
+        if (command.regionMatches(true, 0, ClickListener.CONSOLE_PREFIX, 0,
+                ClickListener.CONSOLE_PREFIX.length())) {
+            // Running from the console hands the player something they have no permission for,
+            // so putting one on a model is an admin's business, not a builder's.
+            if (!require(player, "bdpaste.admin")) return;
+            String rest = command.substring(ClickListener.CONSOLE_PREFIX.length()).trim();
+            if (rest.startsWith("/")) rest = rest.substring(1).trim();
+            if (rest.isEmpty()) {
+                Msg.error(player, "There is no command after 'console:'.");
+                return;
+            }
+            command = ClickListener.CONSOLE_PREFIX + " " + rest;
+        }
+
+        if (command.length() > MAX_COMMAND) {
+            Msg.error(player, "Keep it under " + MAX_COMMAND + " characters.");
+            return;
+        }
+
+        plugin.placed().setClickCommand(target.id(), command);
+        Msg.send(player, "<green><white><model></white> now runs <white>/<cmd></white> "
+                        + "when right clicked.</green>",
+                Msg.arg("model", target.model()), Msg.arg("cmd", command));
+
+        if (!plugin.hitboxes().has(target)) {
+            Msg.plain(player, "<yellow>It has no hitbox yet, so nobody can click it.</yellow> "
+                    + "<gray>Turn one on with <white>/bdpaste hitbox on</white>.</gray>");
+        }
+    }
+
     private void hitbox(CommandSender sender, String[] args) {
         if (!require(sender, "bdpaste.admin")) return;
 
@@ -1048,6 +1134,7 @@ public final class BdCommand implements TabExecutor {
                 case "near", "cleanup" -> prefixed(List.of("16", "32", "64", "128"), args[1]);
                 case "hitbox" -> prefixed(List.of("on", "off", "sync"), args[1]);
                 case "label" -> prefixed(List.of("off", "raise"), args[1]);
+                case "command" -> prefixed(List.of("off", "console:"), args[1]);
                 case "snap" -> prefixed(List.of("off", "pixel", "block"), args[1]);
                 case "repeat" -> prefixed(List.of("on", "off"), args[1]);
                 case "animate" -> prefixed(List.of("off", "once", "loop", "0.5", "1", "2", "4"), args[1]);

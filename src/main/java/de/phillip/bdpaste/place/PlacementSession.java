@@ -394,10 +394,21 @@ public final class PlacementSession {
         player.showEntity(plugin, entity);
     }
 
+    /**
+     * Moves the whole preview.
+     *
+     * <p>Every part rides the anchor, and a plain {@code teleport} of an entity that has
+     * passengers is refused - which used to drop the preview into moving all of them one by one,
+     * so a 216-part model meant 216 teleports on every mouse movement. Asking to keep the
+     * passengers is one call for the lot, and Paper has offered it since well before the oldest
+     * version this supports.</p>
+     */
     private void moveTo(Location target) {
         if (passengersRideAlong) {
-            if (root.teleport(target)) return;
-            // The server would not move a vehicle, so stop using one.
+            if (root.teleport(target, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS)) {
+                return;
+            }
+            // Even that was refused, so stop using a vehicle at all.
             detach("this server will not teleport an entity that has passengers");
         }
         root.teleport(target);
@@ -416,16 +427,18 @@ public final class PlacementSession {
         if (!passengersRideAlong) return;
         passengersRideAlong = false;
         root.eject();
-        plugin.getSLF4JLogger().info(
-                "Preview for {} switched to per-part movement ({}). {} entities will be moved individually.",
-                owner(), reason, model.size());
+        // Said once. It is a property of the server, not of this placement, so repeating it for
+        // every model anybody ever puts down is noise.
+        plugin.warnOnce("detach",
+                "Previews move part by part on this server (" + reason + "). Placing large "
+                        + "models will cost more than it otherwise would.");
     }
 
     private void refreshTransforms() {
         Matrix4f user = userMatrix();
         for (SpawnedPart spawnedPart : spawned) {
             if (!spawnedPart.display().isValid()) continue;
-            spawnedPart.display().setTransformationMatrix(
+            de.phillip.bdpaste.spawn.ModelSpawner.pose(spawnedPart.display(),
                     new Matrix4f(user).mul(spawnedPart.part().restPose()));
         }
     }
@@ -731,7 +744,7 @@ public final class PlacementSession {
                 at.getX(), at.getY(), at.getZ(),
                 yaw, pitch, roll, scale,
                 offsetX, offsetY, offsetZ,
-                spawned.size(), false, 1.0, "", label, labelOffset, true,
+                spawned.size(), false, 1.0, "", label, labelOffset, true, "",
                 // No owner at all when nobody placed it. Null is what the registry already
                 // writes for a missing one and what it reads back, and everything that asks
                 // about an owner is written to cope with it - a model nobody owns is one only
